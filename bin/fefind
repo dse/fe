@@ -18,9 +18,6 @@ main () {
     local -a find_directory_excludes=()
     local -a find_file_excludes=()
 
-    get-options "$@"
-    shift $((OPTIND - 1))
-
     local ARGSHIFT=0
     get-find-arguments "$@"
     shift $((ARGSHIFT))
@@ -384,107 +381,20 @@ get-find-arguments () {
     ARGSHIFT=$(( numargsin - numargsout ))
 }
 
-get-options () {
-    local OPTION
-    while getopts 'O:D:HLPhvn-:' OPTION ; do
-        check-long-option || break
-        case "${OPTION}" in
-            'O')
-                global_options+=("-O${optarg}")
-                ;;
-            'D')
-                global_options+=("-D" "${optarg}")
-                ;;
-            'H')
-                global_options+=("-H")
-                ;;
-            'L')
-                global_options+=("-L")
-                ;;
-            'P')
-                global_options+=("-P")
-                ;;
-            'h'|'help')
-                usage
-                exit 0
-                ;;
-            'v'|'verbose')
-                verbose=$((verbose + 1))
-                ;;
-            'n'|'dry-run')
-                dry_run=1
-                ;;
-            'exclude-binaries'|'exclude-binary'|'exclude-binary-files')
-                exclude_binaries=1
-                ;;
-            'include-binaries'|'include-binary'|'include-binary-files')
-                exclude_binaries=0
-                ;;
-            '?')
-                # short option invalid or missing argument
-                >&2 echo "Type '${PROGNAME} --help' for more information."
-                exit 1
-                ;;
-            *)
-                # invalid long option
-                >&2 echo "${PROGNAME}: unknown option -- ${OPTION}"
-                >&2 echo "Type '${PROGNAME} --help' for more information."
-                exit 1
-                ;;
-        esac
-    done
-}
-
 usage () { cat <<EOF; }
 usage:
-    ${PROGNAME} [<option> ...] [[--] [<find-argument> ...]]
+    ${PROGNAME} [<option> ...] [<find-argument> ...]
 options:
-    -h, --help      display this message
-    -v, --verbose   verbosity
-    -n, --dry-run   dry run
+    --help          display this message
+    --verbose       verbosity
+    --dry-run       dry run
 options passed to find:
     -O <level>      enable query optimization
     -D <options>    print diagnostic information
     -H              only follow symbolic links when processing arguments
     -L              always follow symbolic links
     -P              never follow symbolic links (default)
-notes:
-    if first <find-argument> starts with '-', '--' argument must be specified.
 EOF
-
-###############################################################################
-# poor man's long options for bash
-
-check-long-option () {
-    if [[ "${OPTION}" = "-" ]] ; then
-        if [[ "${OPTARG}" == "" ]] ; then
-            # argument is '--' by itself; terminate option parsing
-            return 1
-        fi
-        OPTION="${OPTARG}"
-        unset OPTARG
-        case "${OPTION}" in
-            *=*)
-                OPTARG="${OPTION#*=}"
-                OPTION="${OPTION%%=*}"
-                ;;
-        esac
-    fi
-    return 0
-}
-
-require-long-option-argument () {
-    local longoption="$1"; shift
-    if [[ ! -v OPTARG ]] ; then
-        if (( OPTIND > $# )) ; then # long option missing argument
-            >&2 echo "${PROGNAME}: option requires an argument -- ${longoption}"
-            >&2 echo "Type '${PROGNAME} --help' for more information."
-            exit 1
-        fi
-        OPTARG="${@:OPTIND:1}"
-        OPTIND=$((OPTIND + 1))
-    fi
-}
 
 ###############################################################################
 
