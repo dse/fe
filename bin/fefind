@@ -1,0 +1,490 @@
+#!/usr/bin/env bash
+set -o pipefail
+set -o nounset
+set -o errexit
+# set -o xtrace
+
+PROGNAME="$(basename "$0")"
+
+main () {
+    local verbose=0
+    local dry_run=0
+    local exclude_binaries=0
+
+    local -a global_options=()
+    local -a starting_points=()
+    local -a directory_excludes=()
+    local -a file_excludes=()
+    local -a find_directory_excludes=()
+    local -a find_file_excludes=()
+
+    get-options "$@"
+    shift $((OPTIND - 1))
+
+    local ARGSHIFT=0
+    get-find-arguments "$@"
+    shift $((ARGSHIFT))
+
+    >&2 echo "global options: ${global_options[@]@Q}"
+    >&2 echo "starting points: ${starting_points[@]@Q}"
+    >&2 echo "remaining arguments: ${@@Q}"
+
+    local find='find'
+    if [[ "$OSTYPE" = "darwin"* ]] && command -v gfind >/dev/null 2>/dev/null ; then
+        find='gfind'
+    fi
+
+    add-directory-excludes
+    add-file-excludes
+    if (( exclude_binaries )) ; then
+        add-binary-file-excludes
+    fi
+
+    >&2 echo "number of directory excludes: ${#directory_excludes[@]}"
+    >&2 echo "number of file excludes:      ${#file_excludes[@]}"
+
+    convert-file-excludes
+    convert-directory-excludes
+
+    >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
+    >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
+
+    local -a find_command=()
+    find_command+=("${find}")
+    find_command+=("${global_options[@]}")
+    find_command+=("${starting_points[@]}")
+    find_command+=("${find_directory_excludes[@]}")
+    find_command+=("${find_file_excludes[@]}")
+    find_command+=("$@")
+
+    if (( dry_run )) ; then
+        >&2 echo "+ ${find_command[@]@Q}"
+        exit 1
+    fi
+    if (( verbose )) ; then
+        >&2 echo "+ ${find_command[@]@Q}"
+    fi
+    exec "${find_command[@]}"
+}
+
+add-directory-excludes () {
+    directory_excludes+=(
+        'vendor'
+        'node_modules'
+        '.cache'
+        '.cpan'
+
+        # version control
+        '.git'
+        '.svn'
+
+        # others from emacs grep.el
+        'SCCS'
+        'RCS'
+        'CVS'
+        'MCVS'
+        '.src'
+        '.hg'
+        '.bzr'
+        '_MTN'
+        '_darcs'
+        '{arch}'
+        '.sass-cache'
+
+        # BigCommerce
+        'parsed/templates'
+        'parsed/scss'
+
+        # emacs
+        'elpa'
+    )
+}
+
+add-file-excludes () {
+    file_excludes+=(
+        # backups
+        '*~'
+        '#*#'
+        '.*~'
+        '.#*'
+        '*.bak'
+        '*.tmp'
+        '*.old'
+        '*.bak.*'
+        '*.tmp.*'
+        '*.old.*'
+
+        # archives
+        '*.zip'
+        '*.jar'
+        '*.sym'
+
+        # compressed files
+        '*.gz'
+
+        # minified/map files
+        '*.min'
+        '*.min.*'
+        '*.css.map'
+        '*.js.map'
+        '*.min.map'
+        'composer.lock'
+
+        # BigCommerce minified
+        'theme-bundle.main.js'
+        'theme.scss.json'
+        'assets/dist/report.html'
+        'parsed/lang.json'
+        'theme-bundle.chunk.*.js'
+        'theme-bundle.head_async.js'
+
+        # projectile
+        'projectile.cache'
+
+        # emacs
+        'ido.last'
+    )
+}
+
+add-binary-file-excludes () {
+    file_excludes+=(
+        # images
+        '*.gif'
+        '*.jpg'
+        '*.jpeg'
+        '*.png'
+        '*.webp'
+
+        # fonts
+        '*.ttf'
+        '*.otf'
+        '*.ttc'
+        '*.woff'
+        '*.eot'
+
+        # executables and libraries
+        '*.exe'
+        '*.a'
+        '*.o'
+        '*.so'
+        '*.dll'
+        '*.dylib'
+
+        # Legacy Microsoft Office
+        '*.doc'
+        '*.ppt'
+        '*.xls'
+
+        # Media
+        '*.mov'
+        '*.m4a'
+        '*.qt'
+        '*.wma'
+        '*.mp3'
+        '*.m4r'
+        '*.flv'
+        '*.wmv'
+        '*.swf'
+
+        # Dalvik
+        '*.dex'
+
+        # Java
+        '*.class'
+
+        # Misc.
+        '*.bin'
+        '*.lbin'
+        '*.flat'
+
+        # Others from emacs grep.el.  I'm assuming these are binary
+        # formats.
+        '*.ln'
+        '*.blg'
+        '*.bbl'
+        '*.elc'
+        '*.lof'
+        '*.glo'
+        '*.idx'
+        '*.lot'
+        '*.fmt'
+        '*.tfm'
+        '*.fas'
+        '*.lib'
+        '*.mem'
+        '*.x86f'
+        '*.sparcf'
+        '*.dfsl'
+        '*.pfsl'
+        '*.d64fsl'
+        '*.p64fsl'
+        '*.lx64fsl'
+        '*.lx32fsl'
+        '*.dx64fsl'
+        '*.dx32fsl'
+        '*.fx64fsl'
+        '*.fx32fsl'
+        '*.sx64fsl'
+        '*.sx32fsl'
+        '*.wx64fsl'
+        '*.wx32fsl'
+        '*.fasl'
+        '*.ufsl'
+        '*.fsl'
+        '*.dxl'
+        '*.lo'
+        '*.la'
+        '*.gmo'
+        '*.mo'
+        '*.toc'
+        '*.aux'
+        '*.cp'
+        '*.fn'
+        '*.ky'
+        '*.pg'
+        '*.tp'
+        '*.vr'
+        '*.cps'
+        '*.fns'
+        '*.kys'
+        '*.pgs'
+        '*.tps'
+        '*.vrs'
+        '*.pyc'
+        '*.pyo'
+
+        # anroid lol
+        '*.apk'
+        '*.aab'
+        '*.dex'
+        '*.ap_'
+    )
+}
+
+convert-file-excludes () {
+    find_file_excludes=()
+    if (( ${#file_excludes[@]} )) ; then
+        >&2 echo "convert-file-excludes: we have some"
+        local exclude
+        for exclude in "${file_excludes[@]}" ; do
+            if (( ${#find_file_excludes[@]} )) ; then
+                find_file_excludes+=("-o")
+            fi
+            case "${exclude}" in
+                */*)
+                    find_file_excludes+=("-ipath" "*/${exclude}")
+                    ;;
+                *)
+                    find_file_excludes+=("-iname" "${exclude}")
+                    ;;
+            esac
+        done
+        find_file_excludes=(
+            \! \( "${find_file_excludes[@]}" \)
+        )
+    fi
+}
+
+convert-directory-excludes () {
+    find_directory_excludes=()
+    if (( ${#directory_excludes[@]} )) ; then
+        >&2 echo "convert-directory-excludes: we have some"
+        local exclude
+        for exclude in "${directory_excludes[@]}" ; do
+            if (( ${#find_directory_excludes[@]} )) ; then
+                find_directory_excludes+=("-o")
+            fi
+            case "${exclude}" in
+                */*)
+                    find_directory_excludes+=("-ipath" "*/${exclude}")
+                    ;;
+                *)
+                    find_directory_excludes+=("-iname" "${exclude}")
+                    ;;
+            esac
+        done
+        find_directory_excludes=(
+            \! \( -type d \( "${find_directory_excludes[@]}" \) -prune \)
+        )
+    fi
+}
+
+get-find-arguments () {
+    local numargsin="$#"
+    while (( $# )) ; do
+        case "$1" in
+            '--verbose'|'-v')
+                shift
+                verbose=$((verbose + 1))
+                ;;
+            '--dry-run'|'-n')
+                shift
+                dry_run=1
+                ;;
+            '--help'|'-h')
+                usage
+                exit 0
+                ;;
+            '--exclude-binaries'|'--exclude-binary'|'--exclude-binary-files')
+                shift
+                exclude_binaries=1
+                ;;
+            '--include-binaries'|'--include-binary'|'--include-binary-files')
+                shift
+                exclude_binaries=0
+                ;;
+            '-D'|'-O')
+                option="$1"; shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: ${option} requires an argument"
+                    exit 1
+                fi
+                optarg="$1"; shift
+                case "$option" in
+                    '-O')
+                        global_options+=("-O${optarg}")
+                        ;;
+                    '-D')
+                        global_options+=("-D" "${optarg}")
+                        ;;
+                esac
+                ;;
+            '-D'*|'-O'*)
+                option="${1:0:2}"; optarg="${1:2}"; shift
+                case "$option" in
+                    '-O')
+                        global_options+=("-O${optarg}")
+                        ;;
+                    '-D')
+                        global_options+=("-D" "${optarg}")
+                        ;;
+                esac
+                ;;
+            '-H'|'-L'|'-P')
+                global_options+=("$1")
+                shift
+                ;;
+            '!')
+                break
+                ;;
+            '(')
+                break
+                ;;
+            '-'*)
+                break
+                ;;
+            *)
+                starting_points+=("$1")
+                shift
+                ;;
+        esac
+    done
+    local numargsout="$#"
+    ARGSHIFT=$(( numargsin - numargsout ))
+}
+
+get-options () {
+    local OPTION
+    while getopts 'O:D:HLPhvn-:' OPTION ; do
+        check-long-option || break
+        case "${OPTION}" in
+            'O')
+                global_options+=("-O${optarg}")
+                ;;
+            'D')
+                global_options+=("-D" "${optarg}")
+                ;;
+            'H')
+                global_options+=("-H")
+                ;;
+            'L')
+                global_options+=("-L")
+                ;;
+            'P')
+                global_options+=("-P")
+                ;;
+            'h'|'help')
+                usage
+                exit 0
+                ;;
+            'v'|'verbose')
+                verbose=$((verbose + 1))
+                ;;
+            'n'|'dry-run')
+                dry_run=1
+                ;;
+            'exclude-binaries'|'exclude-binary'|'exclude-binary-files')
+                exclude_binaries=1
+                ;;
+            'include-binaries'|'include-binary'|'include-binary-files')
+                exclude_binaries=0
+                ;;
+            '?')
+                # short option invalid or missing argument
+                >&2 echo "Type '${PROGNAME} --help' for more information."
+                exit 1
+                ;;
+            *)
+                # invalid long option
+                >&2 echo "${PROGNAME}: unknown option -- ${OPTION}"
+                >&2 echo "Type '${PROGNAME} --help' for more information."
+                exit 1
+                ;;
+        esac
+    done
+}
+
+usage () { cat <<EOF; }
+usage:
+    ${PROGNAME} [<option> ...] [[--] [<find-argument> ...]]
+options:
+    -h, --help      display this message
+    -v, --verbose   verbosity
+    -n, --dry-run   dry run
+options passed to find:
+    -O <level>      enable query optimization
+    -D <options>    print diagnostic information
+    -H              only follow symbolic links when processing arguments
+    -L              always follow symbolic links
+    -P              never follow symbolic links (default)
+notes:
+    if first <find-argument> starts with '-', '--' argument must be specified.
+EOF
+
+###############################################################################
+# poor man's long options for bash
+
+check-long-option () {
+    if [[ "${OPTION}" = "-" ]] ; then
+        if [[ "${OPTARG}" == "" ]] ; then
+            # argument is '--' by itself; terminate option parsing
+            return 1
+        fi
+        OPTION="${OPTARG}"
+        unset OPTARG
+        case "${OPTION}" in
+            *=*)
+                OPTARG="${OPTION#*=}"
+                OPTION="${OPTION%%=*}"
+                ;;
+        esac
+    fi
+    return 0
+}
+
+require-long-option-argument () {
+    local longoption="$1"; shift
+    if [[ ! -v OPTARG ]] ; then
+        if (( OPTIND > $# )) ; then # long option missing argument
+            >&2 echo "${PROGNAME}: option requires an argument -- ${longoption}"
+            >&2 echo "Type '${PROGNAME} --help' for more information."
+            exit 1
+        fi
+        OPTARG="${@:OPTIND:1}"
+        OPTIND=$((OPTIND + 1))
+    fi
+}
+
+###############################################################################
+
+main "$@"
