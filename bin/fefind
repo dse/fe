@@ -11,7 +11,8 @@ main () {
     local dry_run=0
     local exclude_binaries=0
 
-    local -a initial_global_options=()
+    local -a initial_global_options=() # ones that must be specified first
+    local -a global_options=()
     local -a starting_points=()
     local -a directory_excludes=()
     local -a file_excludes=()
@@ -37,8 +38,9 @@ main () {
     convert-directory-excludes
 
     if (( verbose )) ; then
-        >&2 echo "global options:                                 ${initial_global_options[@]@Q}"
+        >&2 echo "initial global options:                         ${initial_global_options[@]@Q}"
         >&2 echo "starting points:                                ${starting_points[@]@Q}"
+        >&2 echo "global options:                                 ${global_options[@]@Q}"
         >&2 echo "remaining arguments:                            ${@@Q}"
         >&2 echo "number of directory excludes:                   ${#directory_excludes[@]}"
         >&2 echo "number of file excludes:                        ${#file_excludes[@]}"
@@ -50,6 +52,7 @@ main () {
     find_command+=("${find}")
     find_command+=("${initial_global_options[@]}")
     find_command+=("${starting_points[@]}")
+    find_command+=("${global_options[@]}")
     find_command+=("${find_directory_excludes[@]}")
     find_command+=(-type f)
     find_command+=("${find_file_excludes[@]}")
@@ -329,6 +332,25 @@ get-find-arguments () {
             '--include-binaries'|'--include-binary'|'--include-binary-files')
                 shift
                 exclude_binaries=0
+                ;;
+
+            '-mindepth')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: -mindepth requires an argument."
+                    exit 1
+                fi
+                global_options+=(-mindepth "$1")
+                shift
+                ;;
+            '-maxdepth')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: -maxdepth requires an argument."
+                    exit 1
+                fi
+                global_options+=(-maxdepth "$1")
+                shift
                 ;;
 
             '-D'|'-O')
