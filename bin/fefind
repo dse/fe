@@ -10,6 +10,8 @@ main () {
     local verbose=0
     local dry_run=0
     local exclude_binaries=0
+    local include_all_directories=0
+    local include_all_files=0
 
     local -a initial_global_options=() # ones that must be specified first
     local -a global_options=()
@@ -28,8 +30,12 @@ main () {
         find='gfind'
     fi
 
-    add-directory-excludes
-    add-file-excludes
+    if (( ! include_all_directories )) ; then
+        add-directory-excludes
+    fi
+    if (( ! include_all_files )) ; then
+        add-file-excludes
+    fi
     if (( exclude_binaries )) ; then
         add-binary-file-excludes
     fi
@@ -333,8 +339,16 @@ get-find-arguments () {
                 shift
                 exclude_binaries=0
                 ;;
+            '--all-directories'|'--include-all-directories')
+                shift
+                include_all_directories=1
+                ;;
+            '--all-files'|'--include-all-files')
+                shift
+                include_all_files=1
+                ;;
 
-            '-mindepth')
+            '-mindepth'|'--mindepth'|'--min-depth')
                 shift
                 if (( ! $# )) ; then
                     >&2 echo "${PROGNAME}: -mindepth requires an argument."
@@ -343,7 +357,7 @@ get-find-arguments () {
                 global_options+=(-mindepth "$1")
                 shift
                 ;;
-            '-maxdepth')
+            '-maxdepth'|'--maxdepth'|'--max-depth')
                 shift
                 if (( ! $# )) ; then
                     >&2 echo "${PROGNAME}: -maxdepth requires an argument."
