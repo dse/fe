@@ -11,7 +11,7 @@ main () {
     local dry_run=0
     local exclude_binaries=0
 
-    local -a global_options=()
+    local -a initial_global_options=()
     local -a starting_points=()
     local -a directory_excludes=()
     local -a file_excludes=()
@@ -36,9 +36,19 @@ main () {
     convert-file-excludes
     convert-directory-excludes
 
+    if (( verbose )) ; then
+        >&2 echo "global options:                                 ${initial_global_options[@]@Q}"
+        >&2 echo "starting points:                                ${starting_points[@]@Q}"
+        >&2 echo "remaining arguments:                            ${@@Q}"
+        >&2 echo "number of directory excludes:                   ${#directory_excludes[@]}"
+        >&2 echo "number of file excludes:                        ${#file_excludes[@]}"
+        >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
+        >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
+    fi
+
     local -a find_command=()
     find_command+=("${find}")
-    find_command+=("${global_options[@]}")
+    find_command+=("${initial_global_options[@]}")
     find_command+=("${starting_points[@]}")
     find_command+=("${find_directory_excludes[@]}")
     find_command+=(-type f)
@@ -299,6 +309,7 @@ get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
         case "$1" in
+
             '--verbose'|'-v')
                 shift
                 verbose=$((verbose + 1))
@@ -319,6 +330,7 @@ get-find-arguments () {
                 shift
                 exclude_binaries=0
                 ;;
+
             '-D'|'-O')
                 option="$1"; shift
                 if (( ! $# )) ; then
@@ -328,10 +340,10 @@ get-find-arguments () {
                 optarg="$1"; shift
                 case "$option" in
                     '-O')
-                        global_options+=("-O${optarg}")
+                        initial_global_options+=("-O${optarg}")
                         ;;
                     '-D')
-                        global_options+=("-D" "${optarg}")
+                        initial_global_options+=("-D" "${optarg}")
                         ;;
                 esac
                 ;;
@@ -339,17 +351,18 @@ get-find-arguments () {
                 option="${1:0:2}"; optarg="${1:2}"; shift
                 case "$option" in
                     '-O')
-                        global_options+=("-O${optarg}")
+                        initial_global_options+=("-O${optarg}")
                         ;;
                     '-D')
-                        global_options+=("-D" "${optarg}")
+                        initial_global_options+=("-D" "${optarg}")
                         ;;
                 esac
                 ;;
             '-H'|'-L'|'-P')
-                global_options+=("$1")
+                initial_global_options+=("$1")
                 shift
                 ;;
+
             '!')
                 break
                 ;;
@@ -371,6 +384,7 @@ get-find-arguments () {
                 #     -not
                 break
                 ;;
+
             *)
                 starting_points+=("$1")
                 shift
