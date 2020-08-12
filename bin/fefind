@@ -25,10 +25,6 @@ main () {
     get-find-arguments "$@"
     shift $((ARGSHIFT))
 
-    >&2 echo "global options: ${global_options[@]@Q}"
-    >&2 echo "starting points: ${starting_points[@]@Q}"
-    >&2 echo "remaining arguments: ${@@Q}"
-
     local find='find'
     if [[ "$OSTYPE" = "darwin"* ]] && command -v gfind >/dev/null 2>/dev/null ; then
         find='gfind'
@@ -40,20 +36,15 @@ main () {
         add-binary-file-excludes
     fi
 
-    >&2 echo "number of directory excludes: ${#directory_excludes[@]}"
-    >&2 echo "number of file excludes:      ${#file_excludes[@]}"
-
     convert-file-excludes
     convert-directory-excludes
-
-    >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
-    >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
 
     local -a find_command=()
     find_command+=("${find}")
     find_command+=("${global_options[@]}")
     find_command+=("${starting_points[@]}")
     find_command+=("${find_directory_excludes[@]}")
+    find_command+=(-type f)
     find_command+=("${find_file_excludes[@]}")
     find_command+=("$@")
 
@@ -264,7 +255,6 @@ add-binary-file-excludes () {
 convert-file-excludes () {
     find_file_excludes=()
     if (( ${#file_excludes[@]} )) ; then
-        >&2 echo "convert-file-excludes: we have some"
         local exclude
         for exclude in "${file_excludes[@]}" ; do
             if (( ${#find_file_excludes[@]} )) ; then
@@ -288,7 +278,6 @@ convert-file-excludes () {
 convert-directory-excludes () {
     find_directory_excludes=()
     if (( ${#directory_excludes[@]} )) ; then
-        >&2 echo "convert-directory-excludes: we have some"
         local exclude
         for exclude in "${directory_excludes[@]}" ; do
             if (( ${#find_directory_excludes[@]} )) ; then
@@ -371,6 +360,18 @@ get-find-arguments () {
                 break
                 ;;
             '-'*)
+                # either a global option:
+                #     -d
+                #     -depth
+                #     ...
+                # or a test:
+                #     -mtime
+                #     -type
+                # or an action:
+                #     -exec
+                #     -print
+                # or an operator:
+                #     -not
                 break
                 ;;
             *)
