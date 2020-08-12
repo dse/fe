@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+# -*- mode: sh; sh-shell: bash; comment-column: 72; fill-column: 128 -*-
+set -o pipefail
+set -o nounset
+set -o errexit
+# set -o xtrace
+
+PROGNAME="$(basename "$0")"
+
+main () {
+    local verbose=0
+    local dry_run=0
+    local exclude_binaries=1
+
+    local matcher=''                       # '', '-E', '-F', '-G', or '-P'
+    local matcher_long=''                  # '', '--extended-regexp', autc.
+    local matcher_required=''
+    local matcher_required_long=''
+    local matcher_conflict_source=''
+
+    local -a grep_options=()
+    local -a grep_patterns=()
+    local -a fefind_options=()
+
+    get-options "$@"
+    shift $((OPTIND - 1))
+
+    # read pattern argument from cmdline
+    if (( ! ${#grep_patterns[@]} )) ; then
+        if (( $# )) ; then
+            grep_patterns+=(-e "$1")
+            shift
+        else
+            >&2 echo "${PROGNAME}: missing pattern argument"
+            exit 1
+        fi
+    fi
+
+    if (( ! $# )) ; then
+        set -- .
+    fi
+
+    local grep='grep'
+    if [[ "$OSTYPE" = "darwin"* ]] && command -v ggrep >/dev/null 2>/dev/null ; then
+        grep='ggrep'
+    fi
+
+    local -a fefind_command=()
+    fefind_command+=("fefind")
+    if (( exclude_binaries )) ; then
+        fefind_command+=(--exclude-binary-files)
+    fi
+    fefind_command+=("$@")
+    fefind_command+=("-exec")
+    fefind_command+=("${grep}")
+    fefind_command+=("${grep_options[@]}")
+    fefind_command+=("${grep_patterns[@]}")
+    fefind_command+=({} +)
+
+    if (( dry_run )) ; then
+        >&2 echo "+ ${fefind_command[@]@Q}"
+        exit 1
+    fi
+    if (( verbose )) ; then
+        >&2 echo "+ ${fefind_command[@]@Q}"
+    fi
+    exec "${fefind_command[@]}"
+}
+
+get-options () {
+    local OPTION
+
+    local options=''
+    options="${options}"'EFGP'                            # matcher options
+    options="${options}"'VivwxycLloqsbHhnTuZaIUz'         # taking no arguments
+    options="${options}"'e:f:m:A:B:C:D:d:'                # taking arguments
+    options="${options}"'rR'                              # taking no effect
+    options="${options}"'-:'                              # this comes last
+
+    while getopts "${options}" OPTION ; do
+        check-long-option || break
+        case "${OPTION}" in
+            # fegrep(1) options --- long ones only
+            'help')                     usage; exit 0;;
+            'verbose')                  verbose=$((verbose + 1));;
+            'dry-run')                  dry_run=1;;
+
+            # grep(1) options specifying a matcher
+            'E'|'extended-regexp')      choose-matcher '-E' '--extended-regexp';;
+            'F'|'fixed-strings')        choose-matcher '-F' '--fixed-strings';;
+            'G'|'basic-regexp')         choose-matcher '-G' '--basic-regexp';;
+            'P'|'perl-regexp')          choose-matcher '-P' '--perl-regexp';;
+
+            # grep(1) options taking no arguments
+            'V'|'version')              grep_options+=(-V);;
+            'i'|'ignore-case')          grep_options+=(-i);;
+            'v'|'invert-match')         grep_options+=(-v);;
+            'w'|'word-regexp')          grep_options+=(-w);;
+            'x'|'line-regexp')          grep_options+=(-x);;
+            'y')                        grep_options+=(-y);;
+            'c'|'count')                grep_options+=(-c);;
+            'L'|'files-without-match')  grep_options+=(-L);;
+            'l'|'files-with-matches')   grep_options+=(-l);;
+            'o'|'only-matching')        grep_options+=(-o);;
+            'q'|'quiet'|'silent')       grep_options+=(-q);;
+            's'|'no-messages')          grep_options+=(-s);;
+            'b'|'byte-offset')          grep_options+=(-b);;
+            'H'|'with-filename')        grep_options+=(-H);;
+            'h'|'no-filename')          grep_options+=(-h);;
+            'n'|'line-number')          grep_options+=(-n);;
+            'T'|'initial-tab')          grep_options+=(-T);;
+            'u'|'unix-byte-offsets')    grep_options+=(-u);;
+            'Z'|'null')                 grep_options+=(-Z);;
+            'a'|'text')                 grep_options+=(-a);;
+            'I')                        grep_options+=(-I);;
+            'U'|'binary')               grep_options+=(-U);;
+            'z'|'null-data')            grep_options+=(-z);;
+
+            # grep(1) options that take no effect
+            'R'|'recursive')                : do nothing;;
+            'r'|'dereference-recursive')    : do nothing;;
+            'D'|'devices')                  : do nothing;;
+            'd'|'directories')              : do nothing;;
+
+            # grep(1) options requiring arguments
+            'e'|'regexp')               require-argument "$@"; grep_patterns+=(-e "${OPTARG}");;
+            'f'|'file')                 require-argument "$@"; grep_patterns+=(-f "${OPTARG}");;
+            'm'|'max-count')            require-argument "$@"; grep_options+=(-m "${OPTARG}");;
+            'A'|'after-context')        require-argument "$@"; grep_options+=(-A "${OPTARG}");;
+            'B'|'before-context')       require-argument "$@"; grep_options+=(-B "${OPTARG}");;
+            'C'|'context')              require-argument "$@"; grep_options+=(-C "${OPTARG}");;
+
+            # fegrep(1) options
+            'non-ascii')                add-non-ascii-pattern;;
+            'non-ascii-printable')      add-non-ascii-printable-pattern;;
+            'css-class')                require-argument "$@"; add-css-class-pattern "${OPTARG}";;
+            'attribute'|'html-attribute'|'sgml-attribute'|'xml-attribute') require-argument "$@"; add-attribute-pattern "${OPTARG}";;
+            'exclude-binaries'|'exclude-binary'|'exclude-binary-files') exclude_binaries=1;;
+            'include-binaries'|'include-binary'|'include-binary-files') exclude_binaries=0;;
+
+            '?')
+                # short option invalid or missing argument
+                >&2 echo "Type '${PROGNAME} --help' for more information."
+                exit 1
+                ;;
+            *)
+                # invalid long option
+                >&2 echo "${PROGNAME}: unknown option -- ${OPTION}"
+                >&2 echo "Type '${PROGNAME} --help' for more information."
+                exit 1
+                ;;
+        esac
+    done
+}
+
+choose-matcher () {
+    matcher="$1"                                                        # e.g., '-E'
+    matcher_long="$2"                                                   # e.g., '--extended-regexp'
+    case "${matcher_required}" in
+        '-P')
+            case "${matcher}" in
+                '-P')
+                    matcher_required="${matcher}"
+                    matcher_required_long="${matcher_long}"
+                    ;;
+                *)
+                    >&2 echo "${PROGNAME}: ${matcher_long} conflicts with ${matcher_conflict_source}, which requires ${matcher_required_long}."
+                    exit 1
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+add-non-ascii-pattern () {
+    require-perl-regexp-matcher '--non-ascii'
+    grep_patterns+=(
+        "-e"
+        "[^[:ascii:]]"
+    )
+}
+
+add-non-ascii-printable-pattern () {
+    require-perl-regexp-matcher '--non-ascii-printable'
+    grep_patterns+=(
+        '-e'
+        $'[^[:print:]\r\t]'     # can't specify \n here, triggers grep(1) error
+    )
+}
+
+add-css-class-pattern () {
+    require-perl-regexp-matcher '--css-class'
+    local classname="$1"
+    local rx="(?x: (?<=^|[[:space:]])
+                   class
+                   [[:space:]]*=[[:space:]]*
+                   (?: \"(?:[^\"]*[[:space:]])?(?:${classname})(?:[[:space:]][^\"]*)?\"
+                     | '(?:[^']*[[:space:]])?(?:${classname})(?:[[:space:]][^']*)?'
+                     | (?:${classname})
+                       (?= \$
+                         | [[:space:]]
+                         | >
+                         | /
+                       )
+                   )
+              )"
+    rx="${rx//$'\n'/ }"
+    grep_patterns+=(
+        "-e"
+        "${rx}"
+    )
+}
+
+add-attribute-pattern () {
+    require-perl-regexp-matcher '--attribute'
+    local attrname="$1"
+    if [[ "$attrname" = *"-" ]] ; then
+        attrname="${attrname}[A-Za-z0-9-]*"
+    fi
+    local rx="(?x: (?<=^|[[:space:]])
+                   (?:${attrname})
+                   (?: [[:space:]]*=[[:space:]]*
+                       (?: \"[^\"]*\"
+                         | '[^']*'
+                         | [^\"'[:space:]]+
+                       )
+                   )?
+              )"
+    rx="${rx//$'\n'/ }"
+    grep_patterns+=(
+        "-e"
+        "${rx}"
+    )
+}
+
+require-perl-regexp-matcher () {
+    local option="$1"; shift                                            # e.g., '--attribute'
+    case "${matcher}" in
+        '')
+            matcher='-P'
+            matcher_long='--perl-regexp'
+            matcher_required='-P'
+            matcher_required_long='--perl-regexp'
+            matcher_conflict_source="${option}"
+            ;;
+        '-P')
+            matcher_required='-P'
+            matcher_required_long='--perl-regexp'
+            matcher_conflict_source="${option}"
+            ;;
+        *)
+            >&2 echo "${PROGNAME}: ${option} conflicts with ${matcher_long} because it requires --perl-regexp."
+            exit 1
+            ;;
+    esac
+}
+
+###############################################################################
+
+usage () { cat <<EOF; }
+usage:
+    ${PROGNAME} [<option> ...] [[--] [<grep-arguments> ...]]
+options:
+    -h, --help              display this message
+    -v, --verbose           verbosity
+    -n, --dry-run           dry run
+        --non-ascii
+        --non-ascii-printable
+        --css-class='<class>'
+        --attribute='<attribute>'
+        --attribute='<prefix>-'
+        --exclude-binaries  (default)
+        --include-binaries  include binary files in grep
+matcher selection:
+    -E, --extended-regexp   extended regular expressions
+    -F, --fixed-strings     fixed strings instead of regular expressions
+    -G, --basic-regexp      basic regular expressions
+    -P, --perl-regexp       Perl-compatible regular expressions
+EOF
+
+###############################################################################
+# poor man's long options for bash
+
+check-long-option () {
+    if [[ "${OPTION}" = "-" ]] ; then
+        if [[ "${OPTARG}" == "" ]] ; then
+            # argument is '--' by itself; terminate option parsing
+            return 1
+        fi
+        OPTION="${OPTARG}"
+        unset OPTARG
+        case "${OPTION}" in
+            *=*)
+                OPTARG="${OPTION#*=}"
+                OPTION="${OPTION%%=*}"
+                ;;
+        esac
+    fi
+    return 0
+}
+
+require-argument () {
+    if [[ "${OPTION}" = ? ]] ; then return ; fi
+    if [[ ! -v OPTARG ]] ; then
+        if (( OPTIND > $# )) ; then # long option missing argument
+            >&2 echo "${PROGNAME}: option requires an argument -- ${OPTION}"
+            >&2 echo "Type '${PROGNAME} --help' for more information."
+            exit 1
+        fi
+        OPTARG="${@:OPTIND:1}"
+        OPTIND=$((OPTIND + 1))
+    fi
+}
+
+###############################################################################
+
+main "$@"
