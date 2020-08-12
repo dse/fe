@@ -10,10 +10,9 @@ PROGNAME="$(basename "$0")"
 main () {
     local verbose=0
     local dry_run=0
-    local exclude_binaries=1
 
-    local matcher=''                       # '', '-E', '-F', '-G', or '-P'
-    local matcher_long=''                  # '', '--extended-regexp', autc.
+    local matcher=''                           # '', '-E', '-F', '-G', or '-P'
+    local matcher_long=''                      # '', '--extended-regexp', autc.
     local matcher_required=''
     local matcher_required_long=''
     local matcher_conflict_source=''
@@ -21,6 +20,7 @@ main () {
     local -a grep_options=()
     local -a grep_patterns=()
     local -a fefind_options=()
+    local -a fefind_exclude_binaries=()
 
     get-options "$@"
     shift $((OPTIND - 1))
@@ -47,9 +47,9 @@ main () {
 
     local -a fefind_command=()
     fefind_command+=("fefind")
-    if (( exclude_binaries )) ; then
-        fefind_command+=(--exclude-binary-files)
-    fi
+    fefind_command+=("${fefind_exclude_binaries[@]}")
+    fefind_command+=("${fefind_options[@]}")
+    fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
     fefind_command+=("$@")
     fefind_command+=("-exec")
     fefind_command+=("${grep}")
@@ -72,49 +72,67 @@ get-options () {
 
     local options=''
     options="${options}"'EFGP'                            # matcher options
-    options="${options}"'VivwxycLloqsbHhnTuZaIUz'         # taking no arguments
-    options="${options}"'e:f:m:A:B:C:D:d:'                # taking arguments
-    options="${options}"'rR'                              # taking no effect
+    options="${options}"'ivwxcLloqsbHhnTuZaIUz'           # taking no arguments
+    options="${options}"'e:f:m:A:B:C:'                    # taking arguments
+    options="${options}"'rRD:d:'                          # taking no effect
     options="${options}"'-:'                              # this comes last
 
     while getopts "${options}" OPTION ; do
         check-long-option || break
         case "${OPTION}" in
             # fegrep(1) options --- long ones only
-            'help')                     usage; exit 0;;
-            'verbose')                  verbose=$((verbose + 1));;
-            'dry-run')                  dry_run=1;;
+            'help')
+                usage; exit 0;;
+            'verbose')
+                verbose=$((verbose + 1));;
+            'dry-run')
+                dry_run=1;;
+            'non-ascii')
+                add-non-ascii-pattern;;
+            'non-ascii-printable')
+                add-non-ascii-printable-pattern;;
+            'css-class')
+                require-argument "$@"; add-css-class-pattern "${OPTARG}";;
+            'attribute'|'html-attribute'|'sgml-attribute'|'xml-attribute')
+                require-argument "$@"; add-attribute-pattern "${OPTARG}";;
+            'exclude-binaries'|'exclude-binary'|'exclude-binary-files')
+                fefind_exclude_binaries=(--exclude-binary-files);;
+            'include-binaries'|'include-binary'|'include-binary-files')
+                fefind_exclude_binaries=();;
+            'mindepth'|'min-depth')
+                require-argument "$@"; fefind_options+=(-mindepth "${OPTARG}");;
+            'maxdepth'|'max-depth')
+                require-argument "$@"; fefind_options+=(-maxdepth "${OPTARG}");;
 
             # grep(1) options specifying a matcher
-            'E'|'extended-regexp')      choose-matcher '-E' '--extended-regexp';;
-            'F'|'fixed-strings')        choose-matcher '-F' '--fixed-strings';;
-            'G'|'basic-regexp')         choose-matcher '-G' '--basic-regexp';;
-            'P'|'perl-regexp')          choose-matcher '-P' '--perl-regexp';;
+            'E'|'extended-regexp')          choose-matcher '-E' '--extended-regexp';;
+            'F'|'fixed-strings')            choose-matcher '-F' '--fixed-strings';;
+            'G'|'basic-regexp')             choose-matcher '-G' '--basic-regexp';;
+            'P'|'perl-regexp')              choose-matcher '-P' '--perl-regexp';;
 
             # grep(1) options taking no arguments
-            'V'|'version')              grep_options+=(-V);;
-            'i'|'ignore-case')          grep_options+=(-i);;
-            'v'|'invert-match')         grep_options+=(-v);;
-            'w'|'word-regexp')          grep_options+=(-w);;
-            'x'|'line-regexp')          grep_options+=(-x);;
-            'y')                        grep_options+=(-y);;
-            'c'|'count')                grep_options+=(-c);;
-            'L'|'files-without-match')  grep_options+=(-L);;
-            'l'|'files-with-matches')   grep_options+=(-l);;
-            'o'|'only-matching')        grep_options+=(-o);;
-            'q'|'quiet'|'silent')       grep_options+=(-q);;
-            's'|'no-messages')          grep_options+=(-s);;
-            'b'|'byte-offset')          grep_options+=(-b);;
-            'H'|'with-filename')        grep_options+=(-H);;
-            'h'|'no-filename')          grep_options+=(-h);;
-            'n'|'line-number')          grep_options+=(-n);;
-            'T'|'initial-tab')          grep_options+=(-T);;
-            'u'|'unix-byte-offsets')    grep_options+=(-u);;
-            'Z'|'null')                 grep_options+=(-Z);;
-            'a'|'text')                 grep_options+=(-a);;
-            'I')                        grep_options+=(-I);;
-            'U'|'binary')               grep_options+=(-U);;
-            'z'|'null-data')            grep_options+=(-z);;
+            'i'|'ignore-case')              grep_options+=(-i);;
+            'v'|'invert-match')             grep_options+=(-v);;
+            'w'|'word-regexp')              grep_options+=(-w);;
+            'x'|'line-regexp')              grep_options+=(-x);;
+            'c'|'count')                    grep_options+=(-c);;
+            'L'|'files-without-match')      grep_options+=(-L);;
+            'l'|'files-with-matches')       grep_options+=(-l);;
+            'o'|'only-matching')            grep_options+=(-o);;
+            'q'|'quiet'|'silent')           grep_options+=(-q);;
+            's'|'no-messages')              grep_options+=(-s);;
+            'b'|'byte-offset')              grep_options+=(-b);;
+            'H'|'with-filename')            grep_options+=(-H);;
+            'h'|'no-filename')              grep_options+=(-h);;
+            'n'|'line-number')              grep_options+=(-n);;
+            'T'|'initial-tab')              grep_options+=(-T);;
+            'u'|'unix-byte-offsets')        grep_options+=(-u);;
+            'Z'|'null')                     grep_options+=(-Z);;
+            'a'|'text')                     grep_options+=(-a);;
+            'I')                            grep_options+=(-I);;
+            'U'|'binary')                   grep_options+=(-U);;
+            'z'|'null-data')                grep_options+=(-z);;
+            'line-buffered')                grep_options+=(--line-buffered);;
 
             # grep(1) options that take no effect
             'R'|'recursive')                : do nothing;;
@@ -123,20 +141,23 @@ get-options () {
             'd'|'directories')              : do nothing;;
 
             # grep(1) options requiring arguments
-            'e'|'regexp')               require-argument "$@"; grep_patterns+=(-e "${OPTARG}");;
-            'f'|'file')                 require-argument "$@"; grep_patterns+=(-f "${OPTARG}");;
-            'm'|'max-count')            require-argument "$@"; grep_options+=(-m "${OPTARG}");;
-            'A'|'after-context')        require-argument "$@"; grep_options+=(-A "${OPTARG}");;
-            'B'|'before-context')       require-argument "$@"; grep_options+=(-B "${OPTARG}");;
-            'C'|'context')              require-argument "$@"; grep_options+=(-C "${OPTARG}");;
+            'e'|'regexp')                   require-argument "$@"; grep_patterns+=(-e "${OPTARG}");;
+            'f'|'file')                     require-argument "$@"; grep_patterns+=(-f "${OPTARG}");;
+            'm'|'max-count')                require-argument "$@"; grep_options+=(-m "${OPTARG}");;
+            'A'|'after-context')            require-argument "$@"; grep_options+=(-A "${OPTARG}");;
+            'B'|'before-context')           require-argument "$@"; grep_options+=(-B "${OPTARG}");;
+            'C'|'context')                  require-argument "$@"; grep_options+=(-C "${OPTARG}");;
+            'label')                        require-argument "$@"; grep_options+=(--label="${OPTARG}");;
+            'binary-files')                 require-argument "$@"; grep_options+=(--binary-files="${OPTARG}");;
 
-            # fegrep(1) options
-            'non-ascii')                add-non-ascii-pattern;;
-            'non-ascii-printable')      add-non-ascii-printable-pattern;;
-            'css-class')                require-argument "$@"; add-css-class-pattern "${OPTARG}";;
-            'attribute'|'html-attribute'|'sgml-attribute'|'xml-attribute') require-argument "$@"; add-attribute-pattern "${OPTARG}";;
-            'exclude-binaries'|'exclude-binary'|'exclude-binary-files') exclude_binaries=1;;
-            'include-binaries'|'include-binary'|'include-binary-files') exclude_binaries=0;;
+            # long grep(1) options taking optional arguments
+            'color')
+                if [[ -v OPTARG ]] ; then
+                    grep_options+=(--color="${OPTARG}")
+                else
+                    grep_options+=(--color)
+                fi
+                ;;
 
             '?')
                 # short option invalid or missing argument
@@ -261,21 +282,63 @@ usage () { cat <<EOF; }
 usage:
     ${PROGNAME} [<option> ...] [[--] [<grep-arguments> ...]]
 options:
-    -h, --help              display this message
-    -v, --verbose           verbosity
-    -n, --dry-run           dry run
+    -h, --help                  display this message
+    -v, --verbose               verbosity
+    -n, --dry-run               dry run
         --non-ascii
         --non-ascii-printable
         --css-class='<class>'
         --attribute='<attribute>'
         --attribute='<prefix>-'
-        --exclude-binaries  (default)
-        --include-binaries  include binary files in grep
+        --exclude-binaries      (default)
+        --include-binaries      include binary files in grep
 matcher selection:
-    -E, --extended-regexp   extended regular expressions
-    -F, --fixed-strings     fixed strings instead of regular expressions
-    -G, --basic-regexp      basic regular expressions
-    -P, --perl-regexp       Perl-compatible regular expressions
+    -E, --extended-regexp       extended regular expressions
+    -F, --fixed-strings         fixed strings instead of regular expressions
+    -G, --basic-regexp          basic regular expressions
+    -P, --perl-regexp           Perl-compatible regular expressions
+matching control
+    -e, --regexp=<pattern>      specify a <pattern> for matching
+    -f, --file=<file>           obtain <pattern>S from <file>
+    -i, --ignore-case           ignore case distinctions
+    -v, --invert-match          select non-matching lines
+    -w, --word-regexp           force <pattern>s to match only whole words
+    -x, --line-regexp           force <pattern>s to match only whole lines
+general output control
+    -c, --count                 print only a count of matching lines per <file>
+    -L, --files-without-match   print names of <file>s containing no matches
+    -l, --files-with-matches    print names of <file>s containing matches
+    -m, --max-count=<num>       stop after <num> matches
+    -o, --only-matching         show only the parts of lines matching <pattern>
+    -q, --quiet, --silent       suppress all normal output
+    -s, --no-messages           suppress error messages
+    --color, --colour[=<when>]  'always', 'never', or 'auto'
+output line prefix control
+    -b, --byte-offset           print the byte offset with output lines
+    -H, --with-filename         print file name prefix
+    -h, --no-filename           suppress file name prefix on output
+        --label=<label>         specify standard input file name prefix
+    -n, --line-number           print line number with output lines
+    -T, --initial-tab           make tabs line up
+    -u, --unix-byte-offsets     report offsets as if CRs were not there
+    -Z, --null                  print '\0' bytes after filenames
+context line control
+    -A, --after-context=<num>   print <num> lines of trailing context
+    -B, --before-context=<num>  print <num> lines of leading context
+    -C, --context=<num>         print <num> lines of output context
+file and directory selection
+    --binary-files=<type>       'binary', 'text', or 'without-match'
+    -a, --text                  --binary-files=text
+    -I                          --binary-files=without-match
+other grep(1) options taken
+        --line-buffered         flush output on every line
+    -U, --binary                do not strip CR characters (DOS/Windows)
+    -z, --null-data
+TODO:
+    --exclude=<glob>
+    --exclude-from=<file>
+    --exclude-dir=<glob>
+    --include=<glob>
 EOF
 
 ###############################################################################
