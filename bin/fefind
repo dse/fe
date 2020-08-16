@@ -471,8 +471,8 @@ options:
     --help                  display this message
     --verbose               verbosity
     --dry-run               dry run
-    --exclude-binaries      exclude binary files from results [fe(1) default]
-    --include-binaries      include binary files in results [fefind(1) default]
+    --exclude-binaries      exclude binary files from results
+    --include-binaries      include binary files in results (default)
     --all-directories       remove default directory exclusions
     --all-files             remove default file exclusions
     --exclude=<glob>        specify additional files to exclude
