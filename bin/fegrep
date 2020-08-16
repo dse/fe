@@ -330,15 +330,15 @@ file and directory selection
     --binary-files=<type>       'binary', 'text', or 'without-match'
     -a, --text                  --binary-files=text
     -I                          --binary-files=without-match
-other grep(1) options taken
+other grep options
         --line-buffered         flush output on every line
     -U, --binary                do not strip CR characters (DOS/Windows)
     -z, --null-data
 TODO:
-    --exclude=<glob>
-    --exclude-from=<file>
-    --exclude-dir=<glob>
-    --include=<glob>
+    --exclude=<glob>            skip matching files
+    --exclude-from=<file>       skip files matching globs specified in file
+    --exclude-dir=<glob>        skip matching directories
+    --include=<glob>            search only matching files
 EOF
 
 ###############################################################################
