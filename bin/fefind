@@ -20,6 +20,8 @@ main () {
     local -a file_excludes=()
     local -a find_directory_excludes=()
     local -a find_file_excludes=()
+    local -a user_file_excludes=()
+    local -a user_directory_excludes=()
 
     local ARGSHIFT=0
     get-find-arguments "$@"
@@ -270,21 +272,21 @@ add-binary-file-excludes () {
 
 convert-file-excludes () {
     find_file_excludes=()
-    if (( ${#file_excludes[@]} )) ; then
-        local exclude
-        for exclude in "${file_excludes[@]}" ; do
-            if (( ${#find_file_excludes[@]} )) ; then
-                find_file_excludes+=("-o")
-            fi
-            case "${exclude}" in
-                */*)
-                    find_file_excludes+=("-ipath" "*/${exclude}")
-                    ;;
-                *)
-                    find_file_excludes+=("-iname" "${exclude}")
-                    ;;
-            esac
-        done
+    local exclude
+    for exclude in "${file_excludes[@]}" "${user_file_excludes[@]}" ; do
+        if (( ${#find_file_excludes[@]} )) ; then
+            find_file_excludes+=("-o")
+        fi
+        case "${exclude}" in
+            */*)
+                find_file_excludes+=("-ipath" "*/${exclude}")
+                ;;
+            *)
+                find_file_excludes+=("-iname" "${exclude}")
+                ;;
+        esac
+    done
+    if (( ${#find_file_excludes[@]} )) ; then
         find_file_excludes=(
             \! \( "${find_file_excludes[@]}" \)
         )
@@ -293,21 +295,21 @@ convert-file-excludes () {
 
 convert-directory-excludes () {
     find_directory_excludes=()
-    if (( ${#directory_excludes[@]} )) ; then
-        local exclude
-        for exclude in "${directory_excludes[@]}" ; do
-            if (( ${#find_directory_excludes[@]} )) ; then
-                find_directory_excludes+=("-o")
-            fi
-            case "${exclude}" in
-                */*)
-                    find_directory_excludes+=("-ipath" "*/${exclude}")
-                    ;;
-                *)
-                    find_directory_excludes+=("-iname" "${exclude}")
-                    ;;
-            esac
-        done
+    local exclude
+    for exclude in "${directory_excludes[@]}" "${user_directory_excludes[@]}" ; do
+        if (( ${#find_directory_excludes[@]} )) ; then
+            find_directory_excludes+=("-o")
+        fi
+        case "${exclude}" in
+            */*)
+                find_directory_excludes+=("-ipath" "*/${exclude}")
+                ;;
+            *)
+                find_directory_excludes+=("-iname" "${exclude}")
+                ;;
+        esac
+    done
+    if (( ${#find_directory_excludes[@]} )) ; then
         find_directory_excludes=(
             \! \( -type d \( "${find_directory_excludes[@]}" \) -prune \)
         )
@@ -347,11 +349,37 @@ get-find-arguments () {
                 shift
                 include_all_files=1
                 ;;
+            '--exclude')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: --exclude requires an argument"
+                    exit 1
+                fi
+                user_file_excludes+=("$1")
+                shift
+                ;;
+            '--exclude-dir')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: --exclude-dir requires an argument"
+                    exit 1
+                fi
+                user_directory_excludes+=("$1")
+                shift
+                ;;
+            '--exclude='*)
+                user_file_excludes+=("${1#*=}")
+                shift
+                ;;
+            '--exclude-dir='*)
+                user_directory_excludes+=("${1#*=}")
+                shift
+                ;;
 
             '-mindepth'|'--mindepth'|'--min-depth')
                 shift
                 if (( ! $# )) ; then
-                    >&2 echo "${PROGNAME}: -mindepth requires an argument."
+                    >&2 echo "${PROGNAME}: -mindepth requires an argument"
                     exit 1
                 fi
                 global_options+=(-mindepth "$1")
@@ -360,11 +388,16 @@ get-find-arguments () {
             '-maxdepth'|'--maxdepth'|'--max-depth')
                 shift
                 if (( ! $# )) ; then
-                    >&2 echo "${PROGNAME}: -maxdepth requires an argument."
+                    >&2 echo "${PROGNAME}: -maxdepth requires an argument"
                     exit 1
                 fi
                 global_options+=(-maxdepth "$1")
                 shift
+                ;;
+
+            '--'*)
+                >&2 echo "${PROGNAME}: ${1}: unknown option or option does not take an argument"
+                exit 1
                 ;;
 
             '-D'|'-O')
@@ -435,15 +468,23 @@ usage () { cat <<EOF; }
 usage:
     ${PROGNAME} [<option> ...] [<find-argument> ...]
 options:
-    --help          display this message
-    --verbose       verbosity
-    --dry-run       dry run
+    --help                  display this message
+    --verbose               verbosity
+    --dry-run               dry run
+    --exclude-binaries      exclude binary files from results [fe(1) default]
+    --include-binaries      include binary files in results [fefind(1) default]
+    --all-directories       remove default directory exclusions
+    --all-files             remove default file exclusions
+    --exclude=<glob>        specify additional files to exclude
+    --exclude-dir=<glob>    specify additional directories to exclude
 options passed to find:
-    -O <level>      enable query optimization
-    -D <options>    print diagnostic information
-    -H              only follow symbolic links when processing arguments
-    -L              always follow symbolic links
-    -P              never follow symbolic links (default)
+    -O <level>              enable query optimization
+    -D <options>            print diagnostic information
+    -H                      only follow symb. links when processing arguments
+    -L                      always follow symb. links
+    -P                      never follow symb. links (default)
+    -mindepth <num>
+    -maxdepth <num>
 EOF
 
 ###############################################################################
