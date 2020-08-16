@@ -21,6 +21,8 @@ main () {
     local -a grep_patterns=()
     local -a fefind_options=()
     local -a fefind_exclude_binaries=()
+    local -a fefind_all_directories=()
+    local -a fefind_all_files=()
 
     get-options "$@"
     shift $((OPTIND - 1))
@@ -48,6 +50,8 @@ main () {
     local -a fefind_command=()
     fefind_command+=("fefind")
     fefind_command+=("${fefind_exclude_binaries[@]}")
+    fefind_command+=("${fefind_all_directories[@]}")
+    fefind_command+=("${fefind_all_files[@]}")
     fefind_command+=("${fefind_options[@]}")
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
     fefind_command+=("$@")
@@ -99,6 +103,10 @@ get-options () {
                 fefind_exclude_binaries=(--exclude-binary-files);;
             'include-binaries'|'include-binary'|'include-binary-files')
                 fefind_exclude_binaries=();;
+            'all-directories')
+                fefind_all_directories=(--all-directories);;
+            'all-files')
+                fefind_all_files=(--all-files);;
             'mindepth'|'min-depth')
                 require-argument "$@"; fefind_options+=(-mindepth "${OPTARG}");;
             'maxdepth'|'max-depth')
@@ -149,6 +157,14 @@ get-options () {
             'C'|'context')                  require-argument "$@"; grep_options+=(-C "${OPTARG}");;
             'label')                        require-argument "$@"; grep_options+=(--label="${OPTARG}");;
             'binary-files')                 require-argument "$@"; grep_options+=(--binary-files="${OPTARG}");;
+
+            'grep-exclude')                 require-argument "$@"; grep_options+=(--exclude="${OPTARG}");;
+            'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");;
+            'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
+            'grep-include')                 require-argument "$@"; grep_options+=(--include="${OPTARG}");;
+
+            'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
+            'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -334,11 +350,18 @@ other grep options
         --line-buffered         flush output on every line
     -U, --binary                do not strip CR characters (DOS/Windows)
     -z, --null-data
-TODO:
-    --exclude=<glob>            skip matching files
-    --exclude-from=<file>       skip files matching globs specified in file
-    --exclude-dir=<glob>        skip matching directories
-    --include=<glob>            search only matching files
+options passed to grep via a different name
+    --grep-exclude=<glob>        skip matching files
+    --grep-exclude-from=<file>   skip files matching globs specified in file
+    --grep-exclude-dir=<glob>    skip matching directories
+    --grep-include=<glob>        search only matching files
+options passed to fefind
+    --fefind-exclude=<glob>      skip matching files
+    --fefind-exclude-dir=<glob>  skip matching directories
+    --all-directories            ignore default directory exclusions
+    --all-files                  ignore default file exclusions
+    --exclude-binaries           exclude binary files from results (default)
+    --include-binaries           include binary files in results
 EOF
 
 ###############################################################################
