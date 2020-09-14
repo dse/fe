@@ -49,16 +49,16 @@ main () {
 
     local -a fefind_command=()
     fefind_command+=("fefind")
-    fefind_command+=("${fefind_exclude_binaries[@]}")
-    fefind_command+=("${fefind_all_directories[@]}")
-    fefind_command+=("${fefind_all_files[@]}")
-    fefind_command+=("${fefind_options[@]}")
+    fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
+    fefind_command+=(${fefind_all_directories+"${fefind_all_directories[@]}"})
+    fefind_command+=(${fefind_all_files+"${fefind_all_files[@]}"})
+    fefind_command+=(${fefind_options+"${fefind_options[@]}"})
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
     fefind_command+=("$@")
     fefind_command+=("-exec")
     fefind_command+=("${grep}")
-    fefind_command+=("${grep_options[@]}")
-    fefind_command+=("${grep_patterns[@]}")
+    fefind_command+=(${grep_options+"${grep_options[@]}"})
+    fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
     if (( dry_run )) ; then
@@ -68,7 +68,7 @@ main () {
     if (( verbose )) ; then
         >&2 echo "+ ${fefind_command[@]@Q}"
     fi
-    exec "${fefind_command[@]}"
+    exec ${fefind_command+"${fefind_command[@]}"}
 }
 
 get-options () {
