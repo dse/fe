@@ -47,6 +47,14 @@ main () {
         grep='ggrep'
     fi
 
+    if [[ "${TERM}" = "emacs-grep" ]] ; then
+        # emacs M-x find-grep
+        grep_options+=(--color -n -H)
+    elif [[ "${TERM}" = "dumb" ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
+        # emacs interactive shell
+        grep_options+=(--color -n -H)
+    fi
+
     local -a fefind_command=()
     fefind_command+=("fefind")
     fefind_command+=("${fefind_exclude_binaries[@]}")
@@ -57,6 +65,9 @@ main () {
     fefind_command+=("$@")
     fefind_command+=("-exec")
     fefind_command+=("${grep}")
+    if [[ "${matcher}" != "" ]] ; then
+        fefind_command+=("${matcher}")
+    fi
     fefind_command+=("${grep_options[@]}")
     fefind_command+=("${grep_patterns[@]}")
     fefind_command+=({} +)
