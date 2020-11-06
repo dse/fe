@@ -1,0 +1,109 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use v5.10.0;
+use utf8;
+
+#------------------------------------------------------------------------------
+use File::Basename qw(basename);
+our $PROGNAME = basename($0);
+
+#------------------------------------------------------------------------------
+use open IO => qw(:locale);
+use Encode::Locale;
+use Encode qw(decode);
+BEGIN {
+    @ARGV = map { decode('locale', $_, Encode::FB_CROAK) } @ARGV;
+}
+
+#------------------------------------------------------------------------------
+# options
+our $context = 0;
+our $lineNumber = 0;
+our $initialTab = 0;
+
+#------------------------------------------------------------------------------
+# process options
+use Getopt::Long;
+Getopt::Long::Configure('bundling', 'gnu_compat', 'no_ignore_case');
+Getopt::Long::GetOptions(
+    'help' => sub { usage(); exit(0); },
+    'context' => \$context,
+    'line-number' => \$lineNumber,
+    'initial-tab' => \$initialTab,
+) or die("Type '$PROGNAME --help' for help.\n");
+
+sub usage { print(<<"END"); }
+usage:
+    $PROGNAME [<option> ...] [<filename> ...]
+options:
+        --help                  Display this message
+END
+
+###############################################################################
+
+my $pp = My::IronSearcher::PostProcessor->new();
+
+$pp->context($context);
+$pp->lineNumber($lineNumber);
+$pp->initialTab($initialTab);
+
+$pp->run();
+
+###############################################################################
+
+package My::IronSearcher::PostProcessor {
+    use Moo;
+    INIT {
+        has context => (is => 'rw');
+        has lineNumber => (is => 'rw');
+        has initialTab => (is => 'rw');
+    }
+    sub run {
+        my $self = shift;
+        my $prevFilename;
+        my $lastPrefix;
+        while (<>) {
+            s{\R\z}{};
+
+            if ($lineNumber) {
+                if ($_ eq '--') {
+                    print "    --\n";
+                    next;
+                }
+            }
+
+            unless (s{^(.*?)\t}{}) {
+                print "$_\n";
+                next;
+            }
+
+            my $prefix = $1;
+            my $contextChar;
+            if ($prefix =~ s{([-:])$}{}) {
+                $contextChar = $1;
+            }
+
+            my $lineNumber;
+            if ($self->lineNumber) {
+                if ($prefix =~ s{\Q$contextChar\E\s*(\d+)$}{}) {
+                    $lineNumber = $1;
+                }
+            }
+
+            if (!defined $lastPrefix || $lastPrefix ne $prefix) {
+                print "$prefix\n";
+                $lastPrefix = $prefix;
+            }
+            print "    ";
+            if ($lineNumber) {
+                printf("%6d%s", $lineNumber, $contextChar);
+            }
+
+            if ($self->initialTab) { # must be immediately before matching line
+                print "\t";
+            }
+            print "$_\n";       # matching line
+        }
+    }
+};

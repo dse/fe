@@ -12,6 +12,7 @@ main () {
     local exclude_binaries=0
     local include_all_directories=0
     local include_all_files=0
+    local all=0
 
     local -a initial_global_options=() # ones that must be specified first
     local -a global_options=()
@@ -30,6 +31,14 @@ main () {
     local find='find'
     if [[ "$OSTYPE" = "darwin"* ]] && command -v gfind >/dev/null 2>/dev/null ; then
         find='gfind'
+    fi
+
+    if (( all >= 1 )) ; then
+        include_all_directories=1
+        include_all_files=1
+    fi
+    if (( all >= 2 )) ; then
+        exclude_binaries=0
     fi
 
     if (( ! include_all_directories )) ; then
@@ -320,7 +329,9 @@ get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
         case "$1" in
-
+            '--all'|'-A')
+                all=$((all + 1))
+                ;;
             '--verbose'|'-v')
                 shift
                 verbose=$((verbose + 1))
