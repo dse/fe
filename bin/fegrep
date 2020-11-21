@@ -1,4 +1,4 @@
- #!/usr/bin/env bash
+#!/usr/bin/env bash
 # -*- mode: sh; sh-shell: bash; comment-column: 72; fill-column: 128 -*-
 set -o pipefail
 set -o nounset
@@ -189,12 +189,14 @@ get-options () {
             'binary-files')                 require-argument "$@"; grep_options+=(--binary-files="${OPTARG}");;
 
             'grep-exclude')                 require-argument "$@"; grep_options+=(--exclude="${OPTARG}");;
-            'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");;
+            'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");; # no use
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
             'grep-include')                 require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
+
+            'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
             'fancy')
                 turn-fancy-on;;
