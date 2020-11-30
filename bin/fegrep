@@ -69,6 +69,9 @@ main () {
     fefind_command+=(${fefind_all_files+"${fefind_all_files[@]}"})
     fefind_command+=(${fefind_options+"${fefind_options[@]}"})
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
+    fefind_command+=("$@")
+    fefind_command+=("-exec")
+    fefind_command+=("${grep}")
     if [[ "${matcher}" != "" ]] ; then
         fefind_command+=("${matcher}")
     fi
@@ -76,17 +79,33 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
-    if (( dry_run )) ; then
-        >&2 echo "+ ${fefind_command[@]@Q}"
-        if (( fancy )) ; then
-            >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+    if ( echo "${@@Q}" ) >/dev/null 2>/dev/null ; then
+        if (( dry_run )) ; then
+            >&2 echo "+ ${fefind_command[@]@Q}"
+            if (( fancy )) ; then
+                >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+            fi
+            exit 1
         fi
-        exit 1
-    fi
-    if (( verbose )) ; then
-        >&2 echo "+ ${fefind_command[@]@Q}"
-        if (( fancy )) ; then
-            >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+        if (( verbose )) ; then
+            >&2 echo "+ ${fefind_command[@]@Q}"
+            if (( fancy )) ; then
+                >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+            fi
+        fi
+    else
+        if (( dry_run )) ; then
+            >&2 echo "+ ${fefind_command[@]}"
+            if (( fancy )) ; then
+                >&2 echo "+ fefancy ${fefancy_options[@]}"
+            fi
+            exit 1
+        fi
+        if (( verbose )) ; then
+            >&2 echo "+ ${fefind_command[@]}"
+            if (( fancy )) ; then
+                >&2 echo "+ fefancy ${fefancy_options[@]}"
+            fi
         fi
     fi
 
