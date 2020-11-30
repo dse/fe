@@ -10,6 +10,13 @@ PROGNAME="$(basename "$0")"
 main () {
     local verbose=0
     local dry_run=0
+    local all=0
+    local context_flag=0
+
+    local fancy=0
+    local files_without_match=0
+    local files_with_matches=0
+    local fefancy_options=()
 
     local matcher=''                           # '', '-E', '-F', '-G', or '-P'
     local matcher_long=''                      # '', '--extended-regexp', autc.
@@ -47,6 +54,14 @@ main () {
         grep='ggrep'
     fi
 
+    if [[ "${TERM}" = "emacs-grep" ]] ; then
+        # emacs M-x find-grep
+        grep_options+=(--color -n -H)
+    elif [[ "${TERM}" = "dumb" ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
+        # emacs interactive shell
+        grep_options+=(--color -n -H)
+    fi
+
     local -a fefind_command=()
     fefind_command+=("fefind")
     fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
@@ -54,21 +69,32 @@ main () {
     fefind_command+=(${fefind_all_files+"${fefind_all_files[@]}"})
     fefind_command+=(${fefind_options+"${fefind_options[@]}"})
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
-    fefind_command+=("$@")
-    fefind_command+=("-exec")
-    fefind_command+=("${grep}")
+    if [[ "${matcher}" != "" ]] ; then
+        fefind_command+=("${matcher}")
+    fi
     fefind_command+=(${grep_options+"${grep_options[@]}"})
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
     if (( dry_run )) ; then
         >&2 echo "+ ${fefind_command[@]@Q}"
+        if (( fancy )) ; then
+            >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+        fi
         exit 1
     fi
     if (( verbose )) ; then
         >&2 echo "+ ${fefind_command[@]@Q}"
+        if (( fancy )) ; then
+            >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
+        fi
     fi
-    exec ${fefind_command+"${fefind_command[@]}"}
+
+    if (( fancy )) ; then
+        "${fefind_command[@]}" | fefancy "${fefancy_options[@]}"
+    else
+        exec "${fefind_command[@]}"
+    fi
 }
 
 get-options () {
@@ -111,6 +137,8 @@ get-options () {
                 require-argument "$@"; fefind_options+=(-mindepth "${OPTARG}");;
             'maxdepth'|'max-depth')
                 require-argument "$@"; fefind_options+=(-maxdepth "${OPTARG}");;
+            'all')
+                fefind_options+=(--all);;
 
             # grep(1) options specifying a matcher
             'E'|'extended-regexp')          choose-matcher '-E' '--extended-regexp';;
@@ -124,16 +152,16 @@ get-options () {
             'w'|'word-regexp')              grep_options+=(-w);;
             'x'|'line-regexp')              grep_options+=(-x);;
             'c'|'count')                    grep_options+=(-c);;
-            'L'|'files-without-match')      grep_options+=(-L);;
-            'l'|'files-with-matches')       grep_options+=(-l);;
+            'L'|'files-without-match')      files-without-match;;
+            'l'|'files-with-matches')       files-with-matches;;
             'o'|'only-matching')            grep_options+=(-o);;
             'q'|'quiet'|'silent')           grep_options+=(-q);;
             's'|'no-messages')              grep_options+=(-s);;
             'b'|'byte-offset')              grep_options+=(-b);;
             'H'|'with-filename')            grep_options+=(-H);;
             'h'|'no-filename')              grep_options+=(-h);;
-            'n'|'line-number')              grep_options+=(-n);;
-            'T'|'initial-tab')              grep_options+=(-T);;
+            'n'|'line-number')              grep_options+=(-n); fefancy_options+=(--line-number);;
+            'T'|'initial-tab')              grep_options+=(-T); fefancy_options+=(--initial-tab);;
             'u'|'unix-byte-offsets')        grep_options+=(-u);;
             'Z'|'null')                     grep_options+=(-Z);;
             'a'|'text')                     grep_options+=(-a);;
@@ -152,19 +180,24 @@ get-options () {
             'e'|'regexp')                   require-argument "$@"; grep_patterns+=(-e "${OPTARG}");;
             'f'|'file')                     require-argument "$@"; grep_patterns+=(-f "${OPTARG}");;
             'm'|'max-count')                require-argument "$@"; grep_options+=(-m "${OPTARG}");;
-            'A'|'after-context')            require-argument "$@"; grep_options+=(-A "${OPTARG}");;
-            'B'|'before-context')           require-argument "$@"; grep_options+=(-B "${OPTARG}");;
-            'C'|'context')                  require-argument "$@"; grep_options+=(-C "${OPTARG}");;
+            'A'|'after-context')            require-argument "$@"; after-context "${OPTARG}";;
+            'B'|'before-context')           require-argument "$@"; before-context "${OPTARG}";;
+            'C'|'context')                  require-argument "$@"; context "${OPTARG}";;
             'label')                        require-argument "$@"; grep_options+=(--label="${OPTARG}");;
             'binary-files')                 require-argument "$@"; grep_options+=(--binary-files="${OPTARG}");;
 
             'grep-exclude')                 require-argument "$@"; grep_options+=(--exclude="${OPTARG}");;
-            'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");;
+            'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");; # no use
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
             'grep-include')                 require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
+
+            'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
+
+            'fancy')
+                turn-fancy-on;;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -188,6 +221,21 @@ get-options () {
                 ;;
         esac
     done
+}
+
+after-context () {
+    grep_options+=(-A "${1}")
+    fefancy_options+=(--context)
+}
+
+before-context () {
+    grep_options+=(-B "${1}")
+    fefancy_options+=(--context)
+}
+
+context () {
+    grep_options+=(-C "${1}")
+    fefancy_options+=(--context)
 }
 
 choose-matcher () {
@@ -271,7 +319,7 @@ add-attribute-pattern () {
 }
 
 require-perl-regexp-matcher () {
-    local option="$1"; shift                                            # e.g., '--attribute'
+    local option="$1"; shift                              # e.g., '--attribute'
     case "${matcher}" in
         '')
             matcher='-P'
@@ -290,6 +338,40 @@ require-perl-regexp-matcher () {
             exit 1
             ;;
     esac
+}
+
+turn-fancy-on () {
+    if (( files_without_match )) ; then
+        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy"
+        exit 1
+    fi
+    if (( files_with_matches )) ; then
+        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy"
+        exit 1
+    fi
+
+    grep_options+=(-T)                                          # --initial-tab
+    fancy=1
+}
+
+files-without-match () {
+    if (( fancy )) ; then
+        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy"
+        exit 1
+    fi
+
+    files_without_match=1
+    grep_options+=(-L)
+}
+
+files-with-matches () {
+    if (( fancy )) ; then
+        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy"
+        exit 1
+    fi
+
+    files_with_matches=1
+    grep_options+=(-l)
 }
 
 ###############################################################################
