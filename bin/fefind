@@ -72,12 +72,11 @@ main () {
 
     local -a find_command=()
     find_command+=("${find}")
-    find_command+=("${initial_global_options[@]}")
-    find_command+=("${starting_points[@]}")
-    find_command+=("${global_options[@]}")
-    find_command+=("${find_directory_excludes[@]}")
-    # find_command+=(-type f)
-    find_command+=("${find_file_excludes[@]}")
+    find_command+=(${initial_global_options+"${initial_global_options[@]}"})
+    find_command+=(${starting_points+"${starting_points[@]}"})
+    find_command+=(${global_options+"${global_options[@]}"})
+    find_command+=(${find_directory_excludes+"${find_directory_excludes[@]}"})
+    find_command+=(${find_file_excludes+"${find_file_excludes[@]}"})
     find_command+=("$@")
 
     if (( dry_run )) ; then
@@ -87,7 +86,7 @@ main () {
     if (( verbose )) ; then
         >&2 echo "+ ${find_command[@]@Q}"
     fi
-    exec "${find_command[@]}"
+    exec ${find_command+"${find_command[@]}"}
 }
 
 add-directory-excludes () {
@@ -305,7 +304,7 @@ add-quasi-binary-file-excludes () {
 convert-file-excludes () {
     find_file_excludes=()
     local exclude
-    for exclude in "${file_excludes[@]}" "${user_file_excludes[@]}" ; do
+    for exclude in ${file_excludes+"${file_excludes[@]}"} ${user_file_excludes+"${user_file_excludes[@]}"} ; do
         if (( ${#find_file_excludes[@]} )) ; then
             find_file_excludes+=("-o")
         fi
@@ -320,7 +319,7 @@ convert-file-excludes () {
     done
     if (( ${#find_file_excludes[@]} )) ; then
         find_file_excludes=(
-            \! \( "${find_file_excludes[@]}" \)
+            \! \( ${find_file_excludes+"${find_file_excludes[@]}"} \)
         )
     fi
 }
@@ -328,7 +327,7 @@ convert-file-excludes () {
 convert-directory-excludes () {
     find_directory_excludes=()
     local exclude
-    for exclude in "${directory_excludes[@]}" "${user_directory_excludes[@]}" ; do
+    for exclude in ${directory_excludes+"${directory_excludes[@]}"} ${user_directory_excludes+"${user_directory_excludes[@]}"} ; do
         if (( ${#find_directory_excludes[@]} )) ; then
             find_directory_excludes+=("-o")
         fi
@@ -343,7 +342,7 @@ convert-directory-excludes () {
     done
     if (( ${#find_directory_excludes[@]} )) ; then
         find_directory_excludes=(
-            \! \( -type d \( "${find_directory_excludes[@]}" \) -prune \)
+            \! \( -type d \( ${find_directory_excludes+"${find_directory_excludes[@]}"} \) -prune \)
         )
     fi
 }
