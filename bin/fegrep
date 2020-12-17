@@ -72,6 +72,7 @@ main () {
     fefind_command+=(${fefind_options+"${fefind_options[@]}"})
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
     fefind_command+=("$@")
+    fefind_command+=("-type" "f")
     fefind_command+=("-exec")
     fefind_command+=("${grep}")
     if [[ "${matcher}" != "" ]] ; then
