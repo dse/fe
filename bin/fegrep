@@ -31,6 +31,14 @@ main () {
     local -a fefind_all_directories=()
     local -a fefind_all_files=()
 
+    local -a fefind_dir_options=()
+
+    if [[ -e ".fefind" ]] ; then
+        . .fefind
+    fi
+
+    set -- ${fefind_dir_options+"${fefind_dir_options[@]}"} "$@"
+
     get-options "$@"
     shift $((OPTIND - 1))
 
@@ -213,10 +221,10 @@ get-options () {
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
+            'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            'fancy')
-                turn-fancy-on;;
+            'fancy')                        turn-fancy-on;;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -240,6 +248,11 @@ get-options () {
                 ;;
         esac
     done
+}
+
+# listed in .fefind
+fefind-option () {
+    fefind_dir_options+=("$@")
 }
 
 after-context () {
@@ -451,14 +464,16 @@ other grep options
         --line-buffered         flush output on every line
     -U, --binary                do not strip CR characters (DOS/Windows)
     -z, --null-data
-options passed to grep via a different name
+options passed to grep
     --grep-exclude=<glob>        skip matching files
     --grep-exclude-from=<file>   skip files matching globs specified in file
     --grep-exclude-dir=<glob>    skip matching directories
     --grep-include=<glob>        search only matching files
 options passed to fefind
-    --fefind-exclude=<glob>      skip matching files
-    --fefind-exclude-dir=<glob>  skip matching directories
+    --exclude=<glob>,            skip matching files
+      --fefind-exclude=<glob>
+    --exclude-dir=<glob>,        skip matching directories (passed to fefind)
+      --fefind-exclude-dir=<glob>
     --all-directories            ignore default directory exclusions
     --all-files                  ignore default file exclusions
     --exclude-binaries           exclude binary files from results (default)
