@@ -10,6 +10,7 @@ main () {
     local verbose=0
     local dry_run=0
     local exclude_binaries=0
+    local exclude_quasi_binaries=0
     local include_all_directories=0
     local include_all_files=0
     local all=0
@@ -39,6 +40,7 @@ main () {
     fi
     if (( all >= 2 )) ; then
         exclude_binaries=0
+        exclude_quasi_binaries=0
     fi
 
     if (( ! include_all_directories )) ; then
@@ -49,6 +51,9 @@ main () {
     fi
     if (( exclude_binaries )) ; then
         add-binary-file-excludes
+    fi
+    if (( exclude_quasi_binaries )) ; then
+        add-quasi-binary-file-excludes
     fi
 
     convert-file-excludes
@@ -71,7 +76,6 @@ main () {
     find_command+=(${starting_points+"${starting_points[@]}"})
     find_command+=(${global_options+"${global_options[@]}"})
     find_command+=(${find_directory_excludes+"${find_directory_excludes[@]}"})
-    find_command+=(-type f)
     find_command+=(${find_file_excludes+"${find_file_excludes[@]}"})
     find_command+=("$@")
 
@@ -115,6 +119,9 @@ add-directory-excludes () {
 
         # emacs
         'elpa'
+
+        # etc.
+        'zip-cache'
     )
 }
 
@@ -270,12 +277,27 @@ add-binary-file-excludes () {
         '*.vrs'
         '*.pyc'
         '*.pyo'
+        '*.ri'
 
         # anroid lol
         '*.apk'
         '*.aab'
         '*.dex'
         '*.ap_'
+    )
+}
+
+add-quasi-binary-file-excludes () {
+    file_excludes+=(
+        '*.doc'
+        '*.docx'
+        '*.xls'
+        '*.xlsx'
+        '*.ppt'
+        '*.pptx'
+        '*.pdf'
+        '*.ps'
+        '*.sfd'                 # FontForge fonts
     )
 }
 
@@ -351,6 +373,14 @@ get-find-arguments () {
             '--include-binaries'|'--include-binary'|'--include-binary-files')
                 shift
                 exclude_binaries=0
+                ;;
+            '--exclude-quasi-binaries'|'--exclude-quasi-binary'|'--exclude-quasi-binary-files')
+                shift
+                exclude_quasi_binaries=1
+                ;;
+            '--include-quasi-binaries'|'--include-quasi-binary'|'--include-quasi-binary-files')
+                shift
+                exclude_quasi_binaries=0
                 ;;
             '--all-directories'|'--include-all-directories')
                 shift
@@ -479,15 +509,17 @@ usage () { cat <<EOF; }
 usage:
     ${PROGNAME} [<option> ...] [<find-argument> ...]
 options:
-    --help                  display this message
-    --verbose               verbosity
-    --dry-run               dry run
-    --exclude-binaries      exclude binary files from results
-    --include-binaries      include binary files in results (default)
-    --all-directories       remove default directory exclusions
-    --all-files             remove default file exclusions
-    --exclude=<glob>        specify additional files to exclude
-    --exclude-dir=<glob>    specify additional directories to exclude
+    --help                      display this message
+    --verbose                   verbosity
+    --dry-run                   dry run
+    --exclude-binaries          exclude binary files from results
+    --include-binaries          include binary files in results (default)
+    --exclude-quasi-binaries    exclude pdf/ps/office/etc. docs
+    --include-quasi-binaries    include pdf/ps/office/etc. docs (default)
+    --all-directories           remove default directory exclusions
+    --all-files                 remove default file exclusions
+    --exclude=<glob>            specify additional files to exclude
+    --exclude-dir=<glob>        specify additional directories to exclude
 options passed to find:
     -O <level>              enable query optimization
     -D <options>            print diagnostic information

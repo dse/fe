@@ -27,7 +27,8 @@ main () {
     local -a grep_options=()
     local -a grep_patterns=()
     local -a fefind_options=()
-    local -a fefind_exclude_binaries=()
+    local -a fefind_exclude_binaries=(--exclude-binaries)
+    local -a fefind_exclude_quasi_binaries=()
     local -a fefind_all_directories=()
     local -a fefind_all_files=()
 
@@ -73,11 +74,13 @@ main () {
     local -a fefind_command=()
     fefind_command+=("fefind")
     fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
+    fefind_command+=(${fefind_exclude_quasi_binaries+"${fefind_exclude_quasi_binaries[@]}"})
     fefind_command+=(${fefind_all_directories+"${fefind_all_directories[@]}"})
     fefind_command+=(${fefind_all_files+"${fefind_all_files[@]}"})
     fefind_command+=(${fefind_options+"${fefind_options[@]}"})
     fefind_command+=(${maxdepth:+--max-depth "${maxdepth}"})
     fefind_command+=("$@")
+    fefind_command+=("-type" "f")
     fefind_command+=("-exec")
     fefind_command+=("${grep}")
     if [[ "${matcher}" != "" ]] ; then
@@ -156,6 +159,10 @@ get-options () {
                 fefind_exclude_binaries=(--exclude-binary-files);;
             'include-binaries'|'include-binary'|'include-binary-files')
                 fefind_exclude_binaries=();;
+            'exclude-quasi-binaries'|'exclude-quasi-binary'|'exclude-quasi-binary-files')
+                fefind_exclude_quasi_binaries=(--exclude-quasi-binary-files);;
+            'include-quasi-binaries'|'include-quasi-binary'|'include-quasi-binary-files')
+                fefind_exclude_quasi_binaries=();;
             'all-directories')
                 fefind_all_directories=(--all-directories);;
             'all-files')
@@ -412,16 +419,18 @@ usage () { cat <<EOF; }
 usage:
     ${PROGNAME} [<option> ...] [[--] [<grep-arguments> ...]]
 options:
-    -h, --help                  display this message
-    -v, --verbose               verbosity
-    -n, --dry-run               dry run
+    -h, --help                      display this message
+    -v, --verbose                   verbosity
+    -n, --dry-run                   dry run
         --non-ascii
         --non-ascii-printable
         --css-class='<class>'
         --attribute='<attribute>'
         --attribute='<prefix>-'
-        --exclude-binaries      (default)
-        --include-binaries      include binary files in grep
+        --exclude-binaries          include binary files in grep (default)
+        --include-binaries          include binary files in grep
+        --exclude-quasi-binaries    exclude pdf/ps/office/etc. docs
+        --include-quasi-binaries    include pdf/ps/office/etc. docs (default)
 matcher selection:
     -E, --extended-regexp       extended regular expressions
     -F, --fixed-strings         fixed strings instead of regular expressions
