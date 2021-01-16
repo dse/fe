@@ -66,7 +66,7 @@ main () {
     if [[ "${TERM}" = "emacs-grep" ]] ; then
         # emacs M-x find-grep
         grep_options+=(--color -n -H)
-    elif [[ "${TERM}" = "dumb" ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
+    elif [[ "${TERM}" = "dumb" ]] && [[ -v INSIDE_EMACS ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
         # emacs interactive shell
         grep_options+=(--color -n -H)
     fi
