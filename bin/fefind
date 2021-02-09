@@ -574,7 +574,7 @@ options:
     --exclude=<glob>            specify additional files to exclude
     --exclude-dir=<glob>        specify additional directories to exclude
     --as-shell                  output shell command for copy/pasting
-    --exclude-path=<glob>       specify appropriate -ipath arguments to find
+    --exclude-path=<glob>       specify appropriate \! -ipath args. to find
 options passed to find:
     -O <level>              enable query optimization
     -D <options>            print diagnostic information
