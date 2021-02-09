@@ -5,8 +5,11 @@ set -o errexit
 # set -o xtrace
 
 PROGNAME="$(basename "$0")"
+PROGDIR="$(dirname "$0")"
 
 main () {
+    . "${PROGDIR}/../share/fe/shell-echo.sh"
+
     local verbose=0
     local dry_run=0
     local exclude_binaries=0
@@ -14,16 +17,21 @@ main () {
     local include_all_directories=0
     local include_all_files=0
     local all=0
+    local as_shell=0
 
     local -a initial_global_options=() # ones that must be specified first
     local -a global_options=()
     local -a starting_points=()
     local -a directory_excludes=()
     local -a file_excludes=()
+
     local -a find_directory_excludes=()
     local -a find_file_excludes=()
+    local -a find_path_excludes=()
+
     local -a user_file_excludes=()
     local -a user_directory_excludes=()
+    local -a user_path_excludes=()
 
     local ARGSHIFT=0
     get-find-arguments "$@"
@@ -58,6 +66,7 @@ main () {
 
     convert-file-excludes
     convert-directory-excludes
+    convert-path-excludes
 
     if (( verbose )) ; then
         >&2 echo "initial global options:                         ${initial_global_options[@]@Q}"
@@ -66,8 +75,10 @@ main () {
         >&2 echo "remaining arguments:                            ${@@Q}"
         >&2 echo "number of directory excludes:                   ${#directory_excludes[@]}"
         >&2 echo "number of file excludes:                        ${#file_excludes[@]}"
+        >&2 echo "number of path excludes:                        ${#path_excludes[@]}"
         >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
         >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
+        >&2 echo "number of path exclude arguments for find:      ${#find_path_excludes[@]}"
     fi
 
     local -a find_command=()
@@ -75,9 +86,16 @@ main () {
     find_command+=(${initial_global_options+"${initial_global_options[@]}"})
     find_command+=(${starting_points+"${starting_points[@]}"})
     find_command+=(${global_options+"${global_options[@]}"})
+    find_command+=(${find_path_excludes+"${find_path_excludes[@]}"})
     find_command+=(${find_directory_excludes+"${find_directory_excludes[@]}"})
     find_command+=(${find_file_excludes+"${find_file_excludes[@]}"})
     find_command+=("$@")
+
+    if (( as_shell )) ; then
+        shell-echo "${find_command[@]}"
+        shell-echo-nl
+        exit
+    fi
 
     if (( dry_run )) ; then
         >&2 echo "+ ${find_command[@]@Q}"
@@ -347,6 +365,22 @@ convert-directory-excludes () {
     fi
 }
 
+convert-path-excludes () {
+    find_path_excludes=()
+    local exclude
+    for exclude in ${user_path_excludes+"${user_path_excludes[@]}"} ; do
+        case "${exclude}" in
+            *'/*')
+                find_path_excludes+=(\! -ipath "${exclude}")
+                ;;
+            *)
+                find_path_excludes+=(\! -ipath "${exclude}")
+                find_path_excludes+=(\! -ipath "${exclude}/*")
+                ;;
+        esac
+    done
+}
+
 get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
@@ -361,6 +395,10 @@ get-find-arguments () {
             '--dry-run'|'-n')
                 shift
                 dry_run=1
+                ;;
+            '--shell'|'--as-shell')
+                shift
+                as_shell=1
                 ;;
             '--help'|'-h')
                 usage
@@ -390,6 +428,7 @@ get-find-arguments () {
                 shift
                 include_all_files=1
                 ;;
+
             '--exclude')
                 shift
                 if (( ! $# )) ; then
@@ -408,12 +447,26 @@ get-find-arguments () {
                 user_directory_excludes+=("$1")
                 shift
                 ;;
+            '--exclude-path')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: --exclude-path requires an argument"
+                    exit 1
+                fi
+                user_path_excludes+=("$1")
+                shift
+                ;;
+
             '--exclude='*)
                 user_file_excludes+=("${1#*=}")
                 shift
                 ;;
             '--exclude-dir='*)
                 user_directory_excludes+=("${1#*=}")
+                shift
+                ;;
+            '--exclude-path='*)
+                user_path_excludes+=("${1#*=}")
                 shift
                 ;;
 
@@ -520,6 +573,8 @@ options:
     --all-files                 remove default file exclusions
     --exclude=<glob>            specify additional files to exclude
     --exclude-dir=<glob>        specify additional directories to exclude
+    --as-shell                  output shell command for copy/pasting
+    --exclude-path=<glob>       specify appropriate -ipath arguments to find
 options passed to find:
     -O <level>              enable query optimization
     -D <options>            print diagnostic information
