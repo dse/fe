@@ -223,7 +223,7 @@ get-options () {
             'grep-exclude')                 require-argument "$@"; grep_options+=(--exclude="${OPTARG}");;
             'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");; # no use
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
-            'grep-include')                 require-argument "$@"; grep_options+=(--include="${OPTARG}");;
+            'include'|'grep-include')       require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
@@ -477,7 +477,8 @@ options passed to grep
     --grep-exclude=<glob>        skip matching files
     --grep-exclude-from=<file>   skip files matching globs specified in file
     --grep-exclude-dir=<glob>    skip matching directories
-    --grep-include=<glob>        search only matching files
+    --include,
+      --grep-include=<glob>      search only matching files
 options passed to fefind
     --exclude=<glob>,            skip matching files
       --fefind-exclude=<glob>
