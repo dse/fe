@@ -466,7 +466,7 @@ context line control
     -B, --before-context=<num>  print <num> lines of leading context
     -C, --context=<num>         print <num> lines of output context
 file and directory selection
-    --binary-files=<type>       'binary', 'text', or 'without-match'
+        --binary-files=<type>   'binary', 'text', or 'without-match'
     -a, --text                  --binary-files=text
     -I                          --binary-files=without-match
 other grep options
@@ -477,13 +477,13 @@ options passed to grep
     --grep-exclude=<glob>        skip matching files
     --grep-exclude-from=<file>   skip files matching globs specified in file
     --grep-exclude-dir=<glob>    skip matching directories
-    --include,
-      --grep-include=<glob>      search only matching files
+    --include, --grep-include=<glob>
+                                 search only matching files
 options passed to fefind
-    --exclude=<glob>,            skip matching files
-      --fefind-exclude=<glob>
-    --exclude-dir=<glob>,        skip matching directories (passed to fefind)
-      --fefind-exclude-dir=<glob>
+    --exclude=<glob>, --fefind-exclude=<glob>
+                                 skip matching files
+    --exclude-dir=<glob>, --fefind-exclude-dir=<glob>
+                                 skip matching directories (passed to fefind)
     --all-directories            ignore default directory exclusions
     --all-files                  ignore default file exclusions
     --exclude-binaries           exclude binary files from results (default)
