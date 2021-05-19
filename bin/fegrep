@@ -11,11 +11,14 @@ PROGDIR="$(dirname "$0")"
 main () {
     . "${PROGDIR}/../share/fe/shell-echo.sh"
 
+    local -a THIS_COMMAND=("${0}" "${@}")
+
     local verbose=0
     local dry_run=0
     local all=0
     local context_flag=0
     local as_shell=0
+    local as_flat=0
 
     local fancy=0
     local files_without_match=0
@@ -81,6 +84,9 @@ main () {
     if (( as_shell )) ; then
         fefind_command+=("--as-shell")
     fi
+    if (( as_flat )) ; then
+        fefind_command+=("--as-flat")
+    fi
     fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
     fefind_command+=(${fefind_exclude_quasi_binaries+"${fefind_exclude_quasi_binaries[@]}"})
     fefind_command+=(${fefind_all_directories+"${fefind_all_directories[@]}"})
@@ -129,6 +135,13 @@ main () {
         fi
     fi
 
+    if (( as_shell )) ; then
+        shell_echo_comment=1
+        shell-echo "${THIS_COMMAND[@]}"
+        shell-echo-nl
+        shell_echo_comment=0
+    fi
+
     if (( fancy )) ; then
         "${fefind_command[@]}" | fefancy "${fefancy_options[@]}"
     else
@@ -154,6 +167,8 @@ get-options () {
                 usage; exit 0;;
             'shell'|'as-shell')
                 as_shell=1;;
+            'flat'|'flatten'|'as-flat')
+                as_flat=1;;
             'fls')
                 require-argument "$@"; fefind_ops+=(-fls "${OPTARG}");;
             'ls')
@@ -238,7 +253,7 @@ get-options () {
             'grep-exclude')                 require-argument "$@"; grep_options+=(--exclude="${OPTARG}");;
             'grep-exclude-dir')             require-argument "$@"; grep_options+=(--exclude-dir="${OPTARG}");; # no use
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
-            'grep-include')                 require-argument "$@"; grep_options+=(--include="${OPTARG}");;
+            'include'|'grep-include')       require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;

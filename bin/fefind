@@ -10,6 +10,8 @@ PROGDIR="$(dirname "$0")"
 main () {
     . "${PROGDIR}/../share/fe/shell-echo.sh"
 
+    local -a THIS_COMMAND=("${0}" "${@}")
+
     local verbose=0
     local dry_run=0
     local exclude_binaries=0
@@ -18,6 +20,7 @@ main () {
     local include_all_files=0
     local all=0
     local as_shell=0
+    local as_flat=0
 
     local -a initial_global_options=() # ones that must be specified first
     local -a global_options=()
@@ -92,6 +95,10 @@ main () {
     find_command+=("$@")
 
     if (( as_shell )) ; then
+        shell_echo_comment=1
+        shell-echo "${THIS_COMMAND[@]}"
+        shell-echo-nl
+        shell_echo_comment=0
         shell-echo "${find_command[@]}"
         shell-echo-nl
         exit
@@ -172,6 +179,7 @@ add-file-excludes () {
         '*.js.map'
         '*.min.map'
         'composer.lock'
+        '*.bundle.js'
 
         # BigCommerce minified
         'theme-bundle.main.js'
@@ -323,22 +331,35 @@ convert-file-excludes () {
     find_file_excludes=()
     local exclude
     for exclude in ${file_excludes+"${file_excludes[@]}"} ${user_file_excludes+"${user_file_excludes[@]}"} ; do
-        if (( ${#find_file_excludes[@]} )) ; then
-            find_file_excludes+=("-o")
+        if (( as_flat )) ; then
+            case "${exclude}" in
+                */*)
+                    find_file_excludes+=(\! -ipath "*/${exclude}")
+                    ;;
+                *)
+                    find_file_excludes+=(\! -iname "${exclude}")
+                    ;;
+            esac
+        else
+            if (( ${#find_file_excludes[@]} )) ; then
+                find_file_excludes+=("-o")
+            fi
+            case "${exclude}" in
+                */*)
+                    find_file_excludes+=("-ipath" "*/${exclude}")
+                    ;;
+                *)
+                    find_file_excludes+=("-iname" "${exclude}")
+                    ;;
+            esac
         fi
-        case "${exclude}" in
-            */*)
-                find_file_excludes+=("-ipath" "*/${exclude}")
-                ;;
-            *)
-                find_file_excludes+=("-iname" "${exclude}")
-                ;;
-        esac
     done
-    if (( ${#find_file_excludes[@]} )) ; then
-        find_file_excludes=(
-            \! \( ${find_file_excludes+"${find_file_excludes[@]}"} \)
-        )
+    if (( ! as_flat )) ; then
+        if (( ${#find_file_excludes[@]} )) ; then
+            find_file_excludes=(
+                \! \( ${find_file_excludes+"${find_file_excludes[@]}"} \)
+            )
+        fi
     fi
 }
 
@@ -346,22 +367,47 @@ convert-directory-excludes () {
     find_directory_excludes=()
     local exclude
     for exclude in ${directory_excludes+"${directory_excludes[@]}"} ${user_directory_excludes+"${user_directory_excludes[@]}"} ; do
-        if (( ${#find_directory_excludes[@]} )) ; then
-            find_directory_excludes+=("-o")
+        if (( as_flat )) ; then
+            case "${exclude}" in
+                /*)
+                    find_directory_excludes+=(
+                        \! \( -type d -ipath "${exclude}" -prune \)
+                    )
+                    ;;
+                */*)
+                    find_directory_excludes+=(
+                        \! \( -type d -ipath "*/${exclude}" -prune \)
+                    )
+                    ;;
+                *)
+                    find_directory_excludes+=(
+                        \! \( -type d -iname "${exclude}" -prune \)
+                    )
+                    ;;
+            esac
+        else
+            if (( ${#find_directory_excludes[@]} )) ; then
+                find_directory_excludes+=("-o")
+            fi
+            case "${exclude}" in
+                /*)
+                    find_directory_excludes+=("-ipath" "${exclude}")
+                    ;;
+                */*)
+                    find_directory_excludes+=("-ipath" "*/${exclude}")
+                    ;;
+                *)
+                    find_directory_excludes+=("-iname" "${exclude}")
+                    ;;
+            esac
         fi
-        case "${exclude}" in
-            */*)
-                find_directory_excludes+=("-ipath" "*/${exclude}")
-                ;;
-            *)
-                find_directory_excludes+=("-iname" "${exclude}")
-                ;;
-        esac
     done
-    if (( ${#find_directory_excludes[@]} )) ; then
-        find_directory_excludes=(
-            \! \( -type d \( ${find_directory_excludes+"${find_directory_excludes[@]}"} \) -prune \)
-        )
+    if (( ! as_flat )) ; then
+        if (( ${#find_directory_excludes[@]} )) ; then
+            find_directory_excludes=(
+                \! \( -type d \( ${find_directory_excludes+"${find_directory_excludes[@]}"} \) -prune \)
+            )
+        fi
     fi
 }
 
@@ -399,6 +445,10 @@ get-find-arguments () {
             '--shell'|'--as-shell')
                 shift
                 as_shell=1
+                ;;
+            '--flat'|'--flatten'|'--as-flat')
+                shift
+                as_flat=1
                 ;;
             '--help'|'-h')
                 usage
