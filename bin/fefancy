@@ -131,10 +131,20 @@ package My::IronSearcher::PostProcessor {
                         printf("%6d\t", $lineNumber);
                     }
                 } else {
-                    if ($context && defined $contextChar) {
-                        printf("%6d%s\t", $lineNumber, $contextChar);
+                    if ($lineNumber) {
+                        if ($context && defined $contextChar) {
+                            printf("%6d%s\t", $lineNumber, $contextChar);
+                        } else {
+                            printf("%6d\t", $lineNumber);
+                        }
                     } else {
-                        printf("%6d\t", $lineNumber);
+                        if ($context) {
+                            if (defined $contextChar) {
+                                printf("%s\t", $contextChar);
+                            } else {
+                                print("\t");
+                            }
+                        }
                     }
                 }
             } else {
