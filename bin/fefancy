@@ -61,21 +61,23 @@ $pp->run();
 package My::IronSearcher::PostProcessor {
     use Moo;
     INIT {
-        has context    => (is => 'rw');
-        has lineNumber => (is => 'rw');
-        has initialTab => (is => 'rw');
-        has kitty      => (is => 'rw');
+        has context        => (is => 'rw');
+        has lineNumber     => (is => 'rw');
+        has initialTab     => (is => 'rw');
+        has kitty          => (is => 'rw');
+        has numberNonBlank => (is => 'rw');
     }
     sub run {
         my $self = shift;
         my $prevFilename;
         my $lastPrefix;
+        my $separatorFlag = 0;
         while (<>) {
             s{\R\z}{};
 
             if ($lineNumber) {
                 if ($_ eq '--') {
-                    print "    --\n";
+                    $separatorFlag = 1;
                     next;
                 }
             }
@@ -99,6 +101,7 @@ package My::IronSearcher::PostProcessor {
             }
 
             if (!defined $lastPrefix || $lastPrefix ne $prefix) {
+                $separatorFlag = 0;
                 if ($self->kitty) {
                     print "==> $prefix <==\n";
                 } else {
@@ -107,15 +110,32 @@ package My::IronSearcher::PostProcessor {
                 $lastPrefix = $prefix;
             }
 
+            if ($separatorFlag) {
+                if ($self->kitty) {
+                    print("\t--\n");
+                } else {
+                    print "    --\n";
+                }
+                $separatorFlag = 0;
+            }
+
             if ($self->kitty) {
                 if ($numberNonBlank) {
-                    if (defined $contextChar) {
-                        printf("%6s\t", $contextChar);
+                    if (defined $contextChar && $contextChar ne ':') {
+                        if ($contextChar eq '-') {
+                            print("\t");
+                        } else {
+                            printf("%6s\t", $contextChar);
+                        }
                     } else {
                         printf("%6d\t", $lineNumber);
                     }
                 } else {
-                    printf("%6d%s\t", $lineNumber, $contextChar);
+                    if ($context && defined $contextChar) {
+                        printf("%6d%s\t", $lineNumber, $contextChar);
+                    } else {
+                        printf("%6d\t", $lineNumber);
+                    }
                 }
             } else {
                 print "    ";
