@@ -75,7 +75,7 @@ package My::IronSearcher::PostProcessor {
         while (<>) {
             s{\R\z}{};
 
-            if ($lineNumber) {
+            if ($context) {
                 if ($_ eq '--') {
                     $separatorFlag = 1;
                     next;
