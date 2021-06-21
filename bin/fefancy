@@ -18,19 +18,23 @@ BEGIN {
 
 #------------------------------------------------------------------------------
 # options
-our $context = 0;
-our $lineNumber = 0;
-our $initialTab = 0;
+our $context        = 0;
+our $lineNumber     = 0;
+our $initialTab     = 0;
+our $kitty          = 0;
+our $numberNonBlank = 0;        # a la kitty
 
 #------------------------------------------------------------------------------
 # process options
 use Getopt::Long;
 Getopt::Long::Configure('bundling', 'gnu_compat', 'no_ignore_case');
 Getopt::Long::GetOptions(
-    'help' => sub { usage(); exit(0); },
-    'context' => \$context,
-    'line-number' => \$lineNumber,
-    'initial-tab' => \$initialTab,
+    'help'            => sub { usage(); exit(0); },
+    'context'         => \$context,
+    'line-number'     => \$lineNumber,
+    'initial-tab'     => \$initialTab,
+    'kitty'           => \$kitty,
+    'number-nonblank' => \$numberNonBlank,
 ) or die("Type '$PROGNAME --help' for help.\n");
 
 sub usage { print(<<"END"); }
@@ -47,6 +51,8 @@ my $pp = My::IronSearcher::PostProcessor->new();
 $pp->context($context);
 $pp->lineNumber($lineNumber);
 $pp->initialTab($initialTab);
+$pp->kitty($kitty);
+$pp->numberNonBlank($numberNonBlank);
 
 $pp->run();
 
@@ -55,9 +61,10 @@ $pp->run();
 package My::IronSearcher::PostProcessor {
     use Moo;
     INIT {
-        has context => (is => 'rw');
+        has context    => (is => 'rw');
         has lineNumber => (is => 'rw');
         has initialTab => (is => 'rw');
+        has kitty      => (is => 'rw');
     }
     sub run {
         my $self = shift;
@@ -92,16 +99,32 @@ package My::IronSearcher::PostProcessor {
             }
 
             if (!defined $lastPrefix || $lastPrefix ne $prefix) {
-                print "$prefix\n";
+                if ($self->kitty) {
+                    print "==> $prefix <==\n";
+                } else {
+                    print "$prefix\n";
+                }
                 $lastPrefix = $prefix;
             }
-            print "    ";
-            if ($lineNumber) {
-                printf("%6d%s", $lineNumber, $contextChar);
-            }
 
-            if ($self->initialTab) { # must be immediately before matching line
-                print "\t";
+            if ($self->kitty) {
+                if ($numberNonBlank) {
+                    if (defined $contextChar) {
+                        printf("%6s\t", $contextChar);
+                    } else {
+                        printf("%6d\t", $lineNumber);
+                    }
+                } else {
+                    printf("%6d%s\t", $lineNumber, $contextChar);
+                }
+            } else {
+                print "    ";
+                if ($lineNumber) {
+                    printf("%6d%s", $lineNumber, $contextChar);
+                }
+                if ($self->initialTab) { # must be immediately before matching line
+                    print "\t";
+                }
             }
             print "$_\n";       # matching line
         }
