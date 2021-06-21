@@ -142,7 +142,9 @@ main () {
         shell_echo_comment=0
     fi
 
-    if (( fancy )) ; then
+    if (( fancy == 2 )) ; then
+        "${fefind_command[@]}" | fefancy --kitty "${fefancy_options[@]}"
+    elif (( fancy )) ; then
         "${fefind_command[@]}" | fefancy "${fefancy_options[@]}"
     else
         exec "${fefind_command[@]}"
@@ -263,7 +265,9 @@ get-options () {
             'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            'fancy')                        turn-fancy-on;;
+            'fancy')                        turn-fancy-on 1;;
+            'kitty')                        turn-fancy-on 2;;
+            'number-nonblank')              fefancy_options+=(--number-nonblank);;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -412,22 +416,24 @@ require-perl-regexp-matcher () {
 }
 
 turn-fancy-on () {
+    local fancyValue="$1"; shift
+
     if (( files_without_match )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy"
+        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
         exit 1
     fi
     if (( files_with_matches )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy"
+        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
         exit 1
     fi
 
     grep_options+=(-T)                                          # --initial-tab
-    fancy=1
+    fancy="${fancyValue}"
 }
 
 files-without-match () {
     if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy"
+        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
         exit 1
     fi
 
@@ -437,7 +443,7 @@ files-without-match () {
 
 files-with-matches () {
     if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy"
+        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
         exit 1
     fi
 
