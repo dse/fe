@@ -8,6 +8,7 @@ PROGNAME="$(basename "$0")"
 PROGDIR="$(dirname "$0")"
 
 main () {
+    . "${PROGDIR}/../share/fe/fe.sh"
     . "${PROGDIR}/../share/fe/shell-echo.sh"
 
     local -a THIS_COMMAND=("${0}" "${@}")
@@ -35,6 +36,12 @@ main () {
     local -a user_file_excludes=()
     local -a user_directory_excludes=()
     local -a user_path_excludes=()
+
+    local -a fefind_config_options=()
+    local -a fegrep_config_options=()
+
+    fe-config
+    set -- ${fefind_config_options+"${fefind_config_options[@]}"} "$@"
 
     local ARGSHIFT=0
     get-find-arguments "$@"

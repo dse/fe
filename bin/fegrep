@@ -9,6 +9,7 @@ PROGNAME="$(basename "$0")"
 PROGDIR="$(dirname "$0")"
 
 main () {
+    . "${PROGDIR}/../share/fe/fe.sh"
     . "${PROGDIR}/../share/fe/shell-echo.sh"
 
     local -a THIS_COMMAND=("${0}" "${@}")
@@ -40,13 +41,11 @@ main () {
     local -a fefind_all_directories=()
     local -a fefind_all_files=()
 
-    local -a fefind_dir_options=()
+    local -a fefind_config_options=()
+    local -a fegrep_config_options=()
 
-    if [[ -e ".fefind" ]] ; then
-        . .fefind
-    fi
-
-    set -- ${fefind_dir_options+"${fefind_dir_options[@]}"} "$@"
+    fe-config
+    set -- ${fegrep_config_options+"${fefind_config_options[@]}"} "$@"
 
     get-options "$@"
     shift $((OPTIND - 1))
@@ -291,11 +290,6 @@ get-options () {
                 ;;
         esac
     done
-}
-
-# listed in .fefind
-fefind-option () {
-    fefind_dir_options+=("$@")
 }
 
 after-context () {
