@@ -167,9 +167,11 @@ add-file-excludes () {
         '*.bak'
         '*.tmp'
         '*.old'
+        '*.orig'
         '*.bak.*'
         '*.tmp.*'
         '*.old.*'
+        '*.orig.*'
 
         # archives
         '*.zip'
