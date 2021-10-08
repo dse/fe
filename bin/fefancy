@@ -72,6 +72,18 @@ package My::IronSearcher::PostProcessor {
         my $prevFilename;
         my $lastPrefix;
         my $separatorFlag = 0;
+
+        my $FILENAME;
+        my $RESET;
+
+        if (-t 1) {
+            $FILENAME = "\e[0;32m";
+            $RESET = "\e[0m";
+        } else {
+            $FILENAME = "";
+            $RESET = "";
+        }
+
         while (<>) {
             s{\R\z}{};
 
@@ -103,9 +115,9 @@ package My::IronSearcher::PostProcessor {
             if (!defined $lastPrefix || $lastPrefix ne $prefix) {
                 $separatorFlag = 0;
                 if ($self->kitty) {
-                    print "==> $prefix <==\n";
+                    print "${FILENAME}==> $prefix <==${RESET}\n";
                 } else {
-                    print "$prefix\n";
+                    print "${FILENAME}$prefix${RESET}\n";
                 }
                 $lastPrefix = $prefix;
             }
