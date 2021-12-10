@@ -156,7 +156,7 @@ get-options () {
     local options=''
     options="${options}"'EFGP'                            # matcher options
     options="${options}"'ivwxcLloqsbHhnTuZaIUz'           # taking no arguments
-    options="${options}"'e:f:m:A:B:C:'                    # taking arguments
+    options="${options}"'e:f:m:A:B:C:.:'                  # taking arguments
     options="${options}"'rRD:d:'                          # taking no effect
     options="${options}"'-:'                              # this comes last
 
@@ -267,6 +267,8 @@ get-options () {
             'fancy')                        turn-fancy-on 1;;
             'kitty')                        turn-fancy-on 2;;
             'number-nonblank')              fefancy_options+=(--number-nonblank);;
+
+            '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
 
             # long grep(1) options taking optional arguments
             'color')

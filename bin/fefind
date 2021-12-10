@@ -37,6 +37,8 @@ main () {
     local -a user_directory_excludes=()
     local -a user_path_excludes=()
 
+    local -a find_file_includes=()
+
     local -a fefind_config_options=()
     local -a fegrep_config_options=()
 
@@ -99,6 +101,7 @@ main () {
     find_command+=(${find_path_excludes+"${find_path_excludes[@]}"})
     find_command+=(${find_directory_excludes+"${find_directory_excludes[@]}"})
     find_command+=(${find_file_excludes+"${find_file_excludes[@]}"})
+    find_command+=(${find_file_includes+"${find_file_includes[@]}"})
     find_command+=("$@")
 
     if (( as_shell )) ; then
@@ -440,6 +443,13 @@ get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
         case "$1" in
+            '-.'?*)
+                if (( ${#find_file_includes[@]} )) ; then
+                    find_file_includes+=(-o)
+                fi
+                find_file_includes+=(-name "*${1#-}")
+		shift
+                ;;
             '--all'|'-A')
                 all=$((all + 1))
                 ;;
@@ -613,6 +623,13 @@ get-find-arguments () {
                 ;;
         esac
     done
+
+    if (( ${#find_file_includes[@]} )) ; then
+        find_file_includes=(
+            '(' "${find_file_includes[@]}" ')'
+        )
+    fi
+
     local numargsout="$#"
     ARGSHIFT=$(( numargsin - numargsout ))
 }
