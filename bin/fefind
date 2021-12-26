@@ -152,6 +152,9 @@ add-directory-excludes () {
         # emacs
         'elpa'
 
+        # nytprof
+        'nytprof'
+
         # etc.
         'zip-cache'
     )
@@ -200,6 +203,9 @@ add-file-excludes () {
 
         # projectile
         'projectile.cache'
+
+        # nytprof
+        'nytprof.out'
 
         # emacs
         'ido.last'
