@@ -198,6 +198,10 @@ get-options () {
                 fefind_all_directories=(--all-directories);;
             'all-files')
                 fefind_all_files=(--all-files);;
+            'allow')
+                require-argument "$@"; fefind_options+=(--allow "${OPTARG}");;
+            'allow-dir')
+                require-argument "$@"; fefind_options+=(--allow-dir "${OPTARG}");;
             'mindepth'|'min-depth')
                 require-argument "$@"; fefind_options+=(-mindepth "${OPTARG}");;
             'maxdepth'|'max-depth')

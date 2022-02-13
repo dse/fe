@@ -44,3 +44,30 @@ fefind-option () {
 fegrep-option () {
     fegrep_config_options+=("$@")
 }
+
+array-includes () {
+    local varname="$1"; shift
+    local value="$1"; shift
+    local -n var="${varname}"
+    local eachvalue
+    for eachvalue in "${var[@]}" ; do
+        if [[ "${eachvalue}" = "${value}" ]] ; then
+            return 0
+        fi
+    done
+    return 1
+}
+array-exclude () {
+    local varname="$1"; shift
+    local value="$1"; shift
+    local -n var="${varname}"
+    local -a newarray=()
+    for eachvalue in "${var[@]}" ; do
+        if [[ "${eachvalue}" = "${value}" ]] ; then
+            :
+        else
+            newarray+=("${eachvalue}")
+        fi
+    done
+    var=("${newarray[@]}")
+}

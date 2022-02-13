@@ -42,6 +42,9 @@ main () {
     local -a fefind_config_options=()
     local -a fegrep_config_options=()
 
+    local -a allow_files=()
+    local -a allow_dirs=()
+
     fe-config
     set -- ${fefind_config_options+"${fefind_config_options[@]}"} "$@"
 
@@ -76,6 +79,16 @@ main () {
         add-quasi-binary-file-excludes
     fi
 
+    local allowfile
+    local allowdir
+
+    for allowfile in "${allow_files[@]}" ; do
+        array-exclude file_excludes "$allowfile"
+    done
+    for allowdir in "${allow_dirs[@]}" ; do
+        array-exclude directory_excludes "$allowdir"
+    done
+
     convert-file-excludes
     convert-directory-excludes
     convert-path-excludes
@@ -87,10 +100,12 @@ main () {
         >&2 echo "remaining arguments:                            ${@@Q}"
         >&2 echo "number of directory excludes:                   ${#directory_excludes[@]}"
         >&2 echo "number of file excludes:                        ${#file_excludes[@]}"
-        >&2 echo "number of path excludes:                        ${#path_excludes[@]}"
+        >&2 echo "number of path excludes:                        ${#find_path_excludes[@]}"
         >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
         >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
         >&2 echo "number of path exclude arguments for find:      ${#find_path_excludes[@]}"
+        >&2 echo "allow ${allow_files[@]}"
+        >&2 echo "allow_dirs ${allow_dirs[@]}"
     fi
 
     local -a find_command=()
@@ -502,6 +517,33 @@ get-find-arguments () {
             '--all-files'|'--include-all-files')
                 shift
                 include_all_files=1
+                ;;
+
+            '--allow')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: --allow requires an argument"
+                    exit 1
+                fi
+                allow_files+=("$1")
+                shift
+                ;;
+            '--allow-dir')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: --allow requires an argument"
+                    exit 1
+                fi
+                allow_dirs+=("$1")
+                shift
+                ;;
+            '--allow'=*)
+                allow_files+=("${1#*=}")
+                shift
+                ;;
+            '--allow-dir'=*)
+                allow_dirs+=("${1#*=}")
+                shift
                 ;;
 
             '--exclude')
