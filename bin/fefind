@@ -580,7 +580,23 @@ get-find-arguments () {
                 user_path_excludes+=("${1#*=}")
                 shift
                 ;;
-
+            '-X='?*)
+                user_file_excludes+=("${1#-X=}")
+                user_directory_excludes+=("${1#-X=}")
+                ;;
+            '-X'?*)
+                user_file_excludes+=("${1#-X}")
+                user_directory_excludes+=("${1#-X}")
+                ;;
+            '-X')
+                shift
+                if (( ! $# )) ; then
+                    >&2 echo "${PROGNAME}: -X requires an argument"
+                    exit 1
+                fi
+                user_file_excludes+=("$1")
+                user_directory_excludes+=("$1")
+                ;;
             '-mindepth'|'--mindepth'|'--min-depth')
                 shift
                 if (( ! $# )) ; then
