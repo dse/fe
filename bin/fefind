@@ -82,10 +82,10 @@ main () {
     local allowfile
     local allowdir
 
-    for allowfile in "${allow_files[@]}" ; do
+    for allowfile in ${allow_files+"${allow_files[@]}"} ; do
         array-exclude file_excludes "$allowfile"
     done
-    for allowdir in "${allow_dirs[@]}" ; do
+    for allowdir in ${allow_dirs+"${allow_dirs[@]}"} ; do
         array-exclude directory_excludes "$allowdir"
     done
 
