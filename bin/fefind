@@ -207,6 +207,7 @@ add-file-excludes () {
         '*.min.map'
         'composer.lock'
         '*.bundle.js'
+        '*.chunk.js'
 
         # BigCommerce minified
         'theme-bundle.main.js'
