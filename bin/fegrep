@@ -87,6 +87,12 @@ main () {
 
     local -a fefind_command=()
     fefind_command+=("fefind")
+    if (( verbose )) ; then
+        fefind_command+=("--verbose")
+    fi
+    if (( dry_run )) ; then
+        fefind_command+=("--dry-run")
+    fi
     if (( as_shell )) ; then
         fefind_command+=("--as-shell")
     fi
