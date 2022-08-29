@@ -22,7 +22,6 @@ main () {
     local as_flat=0
 
     local feformat=0
-    local before_feformat=0
 
     local fancy=0
     local files_without_match=0
@@ -159,9 +158,6 @@ main () {
         feformat_command=(feformat "${feformat_options[@]}")
     fi
     if (( feformat )) ; then
-        if (( before_feformat )) ; then
-            feformat_command=()
-        fi
         if (( ${#feformat_command[@]} )) ; then
             "${fefind_command[@]}" | "${feformat_command[@]}"
         else
@@ -307,9 +303,6 @@ get-options () {
             'column')                       require-argument "$@"
                                             feformat=1
                                             feformat_options+=(--column="${OPTARG}")
-                                            ;;
-            'before-feformat')              feformat=1
-                                            before_feformat=1
                                             ;;
 
             '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
