@@ -120,21 +120,16 @@ main () {
     find_command+=("$@")
 
     if (( as_shell )) ; then
-        shell_echo_comment=1
-        shell-echo "${THIS_COMMAND[@]}"
-        shell-echo-nl
-        shell_echo_comment=0
         shell-echo "${find_command[@]}"
-        shell-echo-nl
         exit
     fi
 
     if (( dry_run )) ; then
-        >&2 echo "+ ${find_command[@]@Q}"
+        >&2 shell-echo "+ ${find_command[@]}"
         exit 1
     fi
     if (( verbose )) ; then
-        >&2 echo "+ ${find_command[@]@Q}"
+        >&2 shell-echo "+ ${find_command[@]}"
     fi
     exec ${find_command+"${find_command[@]}"}
 }

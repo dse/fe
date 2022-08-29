@@ -111,52 +111,41 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
-    if ( echo "${@@Q}" ) >/dev/null 2>/dev/null ; then
-        if (( dry_run )) ; then
-            >&2 echo "+ ${fefind_command[@]@Q}"
-            if (( feformat )) ; then
-                >&2 echo "+ feformat ${feformat_options[@]@Q}"
-            fi
-            exit 1
-        fi
-        if (( verbose )) ; then
-            >&2 echo "+ ${fefind_command[@]@Q}"
-            if (( feformat )) ; then
-                >&2 echo "+ feformat ${feformat_options[@]@Q}"
-            fi
-        fi
-    else
-        if (( dry_run )) ; then
-            >&2 echo "+ ${fefind_command[@]}"
-            if (( feformat )) ; then
-                >&2 echo "+ feformat ${feformat_options[@]}"
-            fi
-            exit 1
-        fi
-        if (( verbose )) ; then
-            >&2 echo "+ ${fefind_command[@]}"
-            if (( feformat )) ; then
-                >&2 echo "+ feformat ${feformat_options[@]}"
-            fi
-        fi
-    fi
-
-    if (( as_shell )) ; then
-        shell_echo_comment=1
-        shell-echo "${THIS_COMMAND[@]}"
-        shell-echo-nl
-        shell_echo_comment=0
-    fi
-
     local -a feformat_command=()
-
     if (( fancy == 2 )) ; then
+        feformat=1
         feformat_command=(feformat --kitty "${feformat_options[@]}")
     elif (( fancy )) ; then
+        feformat=1
         feformat_command=(feformat --headings "${feformat_options[@]}")
     elif (( feformat )) ; then
         feformat_command=(feformat "${feformat_options[@]}")
     fi
+
+    if (( as_shell )) ; then
+        if (( feformat )) ; then
+            shell-echo "${fefind_command[@]}" "|"
+            shell-echo "${feformat_command[@]}"
+        else
+            shell-echo "${fefind_command[@]}"
+        fi
+        exit
+    fi
+
+    if (( dry_run )) ; then
+        >&2 shell-echo "+ ${fefind_command[@]}"
+        if (( feformat )) ; then
+            >&2 shell-echo "+ ${feformat_command[@]}"
+        fi
+        exit 1
+    fi
+    if (( verbose )) ; then
+        >&2 shell-echo "+ ${fefind_command[@]}"
+        if (( feformat )) ; then
+            >&2 shell-echo "+ ${feformat_command[@]}"
+        fi
+    fi
+
     if (( feformat )) ; then
         if (( ${#feformat_command[@]} )) ; then
             "${fefind_command[@]}" | "${feformat_command[@]}"
