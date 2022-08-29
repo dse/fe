@@ -6,6 +6,65 @@ declare -i shell_echo_first=1
 declare -i shell_echo_next_newline=0
 declare -i shell_echo_comment=0
 
+shell-echo-find () {
+    local -i indent=0
+    local indentation=''
+    local indentone='    '
+    local space=''
+    local -i returnatend=0
+    addindent () {
+        indent=$((indent + 1))
+        indentation="${indentation}${indentone}"
+    }
+    unindent () {
+        if (( indent > 0 )) ; then
+            indent=$((indent - 1))
+        fi
+        if [[ "${indentation}" =~ . ]] ; then
+            indentation="${indentation%${indentone}}"
+        fi
+    }
+    for i ; do
+        case "${i}" in
+            '(')
+                echo "${space}\\("
+                addindent
+                returnatend=0
+                space="${indentation}"
+                ;;
+            ')')
+                echo "${space}\\) \\"
+                unindent
+                space="${indentation}"
+                returnatend=0
+                ;;
+            '-o')
+                echo "${space}-o \\"
+                space="${indentation}"
+                returnatend=0
+                ;;
+            '')
+                echo -n "${space}''"
+                space=' '
+                returnatend=1
+                ;;
+            *[^-A-Za-z0-9+,./:=@_]*)
+                echo -n "${space}${i@Q}"
+                space=' '
+                returnatend=1
+                ;;
+            *)
+                echo -n "${space}$i"
+                space=' '
+                returnatend=1
+                ;;
+        esac
+    done
+    if (( returnatend )) ; then
+        echo
+    fi
+}
+
 shell-echo-raw () {
     local i
     local -i next_column
