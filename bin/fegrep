@@ -21,12 +21,8 @@ main () {
     local as_shell=0
     local as_flat=0
 
-    local feformat=0
-
-    local fancy=0
     local files_without_match=0
     local files_with_matches=0
-    local feformat_options=()
     local fecolumn=0
 
     local matcher=''                           # '', '-E', '-F', '-G', or '-P'
@@ -83,10 +79,6 @@ main () {
         grep_options+=(--color -n -H)
     fi
 
-    if (( feformat )) ; then
-        grep_options+=(-T)
-    fi
-
     fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
     fefind_command+=(${fefind_exclude_quasi_binaries+"${fefind_exclude_quasi_binaries[@]}"})
     fefind_command+=(${fefind_all_directories+"${fefind_all_directories[@]}"})
@@ -105,17 +97,6 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
-    local -a feformat_command=()
-    if (( fancy == 2 )) ; then
-        feformat=1
-        feformat_command=(feformat --kitty "${feformat_options[@]}")
-    elif (( fancy )) ; then
-        feformat=1
-        feformat_command=(feformat --headings "${feformat_options[@]}")
-    elif (( feformat )) ; then
-        feformat_command=(feformat "${feformat_options[@]}")
-    fi
-
     if (( as_shell )) ; then
         shell-echo "${fefind_command[@]}"
         exit
@@ -128,15 +109,7 @@ main () {
     fi
 
     # do the thing
-    if (( feformat )) ; then
-        if (( ${#feformat_command[@]} )) ; then
-            "${fefind_command[@]}" | "${feformat_command[@]}"
-        else
-            exec "${fefind_command[@]}"
-        fi
-    else
-        exec "${fefind_command[@]}"
-    fi
+    exec "${fefind_command[@]}"
 }
 
 get-options () {
@@ -222,8 +195,8 @@ get-options () {
             'b'|'byte-offset')              grep_options+=(-b);;
             'H'|'with-filename')            grep_options+=(-H);;
             'h'|'no-filename')              grep_options+=(-h);;
-            'n'|'line-number')              grep_options+=(-n); feformat_options+=(--line-number);;
-            'T'|'initial-tab')              grep_options+=(-T); feformat_options+=(--initial-tab);;
+            'n'|'line-number')              grep_options+=(-n);;
+            'T'|'initial-tab')              grep_options+=(-T);;
             'u'|'unix-byte-offsets')        grep_options+=(-u);;
             'Z'|'null')                     grep_options+=(-Z);;
             'a'|'text')                     grep_options+=(-a);;
@@ -266,20 +239,6 @@ get-options () {
             'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            'fancy')                        feformat=1
-                                            turn-fancy-on 1
-                                            ;;
-            'kitty')                        feformat=1
-                                            turn-fancy-on 2
-                                            ;;
-            'number-nonblank')              feformat=1
-                                            feformat_options+=(--number-nonblank)
-                                            ;;
-            'column')                       require-argument "$@"
-                                            feformat=1
-                                            feformat_options+=(--column="${OPTARG}")
-                                            ;;
-
             '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
 
             # long grep(1) options taking optional arguments
@@ -308,17 +267,14 @@ get-options () {
 
 after-context () {
     grep_options+=(-A "${1}")
-    feformat_options+=(--context)
 }
 
 before-context () {
     grep_options+=(-B "${1}")
-    feformat_options+=(--context)
 }
 
 context () {
     grep_options+=(-C "${1}")
-    feformat_options+=(--context)
 }
 
 choose-matcher () {
@@ -423,33 +379,12 @@ require-perl-regexp-matcher () {
     esac
 }
 
-turn-fancy-on () {
-    local fancyValue="$1"; shift
-    if (( files_without_match )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
-        exit 1
-    fi
-    if (( files_with_matches )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
-        exit 1
-    fi
-    fancy="${fancyValue}"
-}
-
 files-without-match () {
-    if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
-        exit 1
-    fi
     files_without_match=1
     grep_options+=(-L)
 }
 
 files-with-matches () {
-    if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
-        exit 1
-    fi
     files_with_matches=1
     grep_options+=(-l)
 }
@@ -497,10 +432,6 @@ general output control
     -q, --quiet, --silent       suppress all normal output
     -s, --no-messages           suppress error messages
     --color, --colour[=<when>]  'always', 'never', or 'auto'
-fe output control
-        --fancy
-        --kitty
-        --column=<int>
 output line prefix control
     -b, --byte-offset           print the byte offset with output lines
     -H, --with-filename         print file name prefix

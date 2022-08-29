@@ -31,9 +31,6 @@ utility.
 
 -   They are pretty heavy front-ends to `grep` and `find`.
 
--   It optionally runs `feformat` for more nicely formatted output
-    than `grep`'s default.
-
 -   It handles file and directory exclusions better.
 
 -   It has built-in common pattern searches such as `--non-ascii` and
