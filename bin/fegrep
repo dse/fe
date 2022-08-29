@@ -123,29 +123,17 @@ main () {
     fi
 
     if (( as_shell )) ; then
-        if (( feformat )) ; then
-            shell-echo "${fefind_command[@]}" "|"
-            shell-echo "${feformat_command[@]}"
-        else
-            shell-echo "${fefind_command[@]}"
-        fi
+        shell-echo "${fefind_command[@]}"
         exit
     fi
-
+    if (( dry_run || verbose )) ; then
+        >&2 shell-echo "+ ${fefind_command[@]}"
+    fi
     if (( dry_run )) ; then
-        >&2 shell-echo "+ ${fefind_command[@]}"
-        if (( feformat )) ; then
-            >&2 shell-echo "+ ${feformat_command[@]}"
-        fi
-        exit 1
-    fi
-    if (( verbose )) ; then
-        >&2 shell-echo "+ ${fefind_command[@]}"
-        if (( feformat )) ; then
-            >&2 shell-echo "+ ${feformat_command[@]}"
-        fi
+        exec "${fefind_command[@]}"
     fi
 
+    # do the thing
     if (( feformat )) ; then
         if (( ${#feformat_command[@]} )) ; then
             "${fefind_command[@]}" | "${feformat_command[@]}"

@@ -123,14 +123,14 @@ main () {
         shell-echo "${find_command[@]}"
         exit
     fi
-
+    if (( dry_run || verbose )) ; then
+        >&2 shell-echo "+ ${find_command[@]}"
+    fi
     if (( dry_run )) ; then
-        >&2 shell-echo "+ ${find_command[@]}"
-        exit 1
+        exit
     fi
-    if (( verbose )) ; then
-        >&2 shell-echo "+ ${find_command[@]}"
-    fi
+
+    # do the thing
     exec ${find_command+"${find_command[@]}"}
 }
 
