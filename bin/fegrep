@@ -98,11 +98,11 @@ main () {
     fefind_command+=({} +)
 
     if (( as_shell )) ; then
-        shell-echo "${fefind_command[@]}"
+        shell-echo-find-cmd "${fefind_command[@]}"
         exit
     fi
     if (( dry_run || verbose )) ; then
-        >&2 shell-echo "+ ${fefind_command[@]}"
+        >&2 shell-echo-find-cmd "${fefind_command[@]}"
     fi
     if (( dry_run )) ; then
         exec "${fefind_command[@]}"
@@ -240,6 +240,22 @@ get-options () {
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
             '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
+
+            '.js')
+                grep_options+=(
+                    --include="*.js"
+                    --include="*.mjs"
+                    --include="*.cjs"
+                    --include="*.jsx"
+                );;
+
+            '.html')
+                grep_options+=(
+                    --include="*.htm"
+                    --include="*.html"
+                    --include="*.xhtml"
+                    --include="*.php"
+                );;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -475,8 +491,9 @@ fe config file load order:
     ../../.fe-config.sh
     etc.
 config file contents:
-    fefind-option
-    fegrep-option
+    # -*- mode: sh; sh-shell: bash -*-
+    fefind-option -<option> --<option> ...
+    fegrep-option -<option> --<option> ...
 EOF
 
 ###############################################################################

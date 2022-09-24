@@ -93,7 +93,7 @@ main () {
     convert-directory-excludes
     convert-path-excludes
 
-    if (( verbose )) ; then
+    if (( verbose >= 2 )) ; then
         >&2 echo "initial global options:                         ${initial_global_options[@]@Q}"
         >&2 echo "starting points:                                ${starting_points[@]@Q}"
         >&2 echo "global options:                                 ${global_options[@]@Q}"
@@ -120,11 +120,11 @@ main () {
     find_command+=("$@")
 
     if (( as_shell )) ; then
-        shell-echo "${find_command[@]}"
+        shell-echo-find-cmd "${find_command[@]}"
         exit
     fi
     if (( dry_run || verbose )) ; then
-        >&2 shell-echo "+ ${find_command[@]}"
+        >&2 shell-echo-find-cmd "${find_command[@]}"
     fi
     if (( dry_run )) ; then
         exit
@@ -450,15 +450,38 @@ convert-path-excludes () {
     done
 }
 
+append-find-file-includes () {
+    local i
+    for i ; do
+        if (( ${#find_file_includes[@]} )) ; then
+            find_file_includes+=(-o)
+        fi
+        find_file_includes+=(-name "$i")
+    done
+}
+
 get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
         case "$1" in
+            '--.js')
+                append-find-file-includes "*.js"
+                append-find-file-includes "*.mjs"
+                append-find-file-includes "*.cjs"
+                append-find-file-includes "*.jsx"
+                ;;
+            '--.html')
+                append-find-file-includes "*.htm"
+                append-find-file-includes "*.html"
+                append-find-file-includes "*.xhtml"
+                append-find-file-includes "*.php"
+                ;;
+            '--.'?*)
+                >&2 echo "invalid multi-extension file type: $1"
+                exit 1
+                ;;
             '-.'?*)
-                if (( ${#find_file_includes[@]} )) ; then
-                    find_file_includes+=(-o)
-                fi
-                find_file_includes+=(-name "*${1#-}")
+                append-find-file-includes "*${1#-}"
 		shift
                 ;;
             '--all'|'-A')
