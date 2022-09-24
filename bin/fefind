@@ -94,18 +94,18 @@ main () {
     convert-path-excludes
 
     if (( verbose >= 2 )) ; then
-        >&2 echo "initial global options:                         ${initial_global_options[@]@Q}"
-        >&2 echo "starting points:                                ${starting_points[@]@Q}"
-        >&2 echo "global options:                                 ${global_options[@]@Q}"
-        >&2 echo "remaining arguments:                            ${@@Q}"
-        >&2 echo "number of directory excludes:                   ${#directory_excludes[@]}"
-        >&2 echo "number of file excludes:                        ${#file_excludes[@]}"
-        >&2 echo "number of path excludes:                        ${#find_path_excludes[@]}"
-        >&2 echo "number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
-        >&2 echo "number of file exclude arguments for find:      ${#find_file_excludes[@]}"
-        >&2 echo "number of path exclude arguments for find:      ${#find_path_excludes[@]}"
-        >&2 echo "allow ${allow_files[@]}"
-        >&2 echo "allow_dirs ${allow_dirs[@]}"
+        >&2 echo "fefind: initial global options:                         ${initial_global_options[@]@Q}"
+        >&2 echo "fefind: starting points:                                ${starting_points[@]@Q}"
+        >&2 echo "fefind: global options:                                 ${global_options[@]@Q}"
+        >&2 echo "fefind: remaining arguments:                            ${@@Q}"
+        >&2 echo "fefind: number of directory excludes:                   ${#directory_excludes[@]}"
+        >&2 echo "fefind: number of file excludes:                        ${#file_excludes[@]}"
+        >&2 echo "fefind: number of path excludes:                        ${#find_path_excludes[@]}"
+        >&2 echo "fefind: number of directory exclude arguments for find: ${#find_directory_excludes[@]}"
+        >&2 echo "fefind: number of file exclude arguments for find:      ${#find_file_excludes[@]}"
+        >&2 echo "fefind: number of path exclude arguments for find:      ${#find_path_excludes[@]}"
+        >&2 echo "fefind: allow ${allow_files[@]}"
+        >&2 echo "fefind: allow_dirs ${allow_dirs[@]}"
     fi
 
     local -a find_command=()
@@ -490,6 +490,7 @@ get-find-arguments () {
             '--verbose'|'-v')
                 shift
                 verbose=$((verbose + 1))
+                # >&2 echo "fegrep: verbose=${verbose}"
                 ;;
             '--dry-run'|'-n')
                 shift
