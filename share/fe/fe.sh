@@ -1,5 +1,7 @@
 # -*- mode: sh; sh-shell: bash -*-
+fe_config_verbose=0
 fe-config () {
+    (( fe_config_verbose >= 2 )) && >&2 echo +fe-config+
     if (( ${FE_NO_USER_CONFIG:+$FE_NO_USER_CONFIG} )) ; then
         return
     fi
@@ -7,19 +9,24 @@ fe-config () {
     fe-dir-config
 }
 fe-user-config () {
+    (( fe_config_verbose >= 2 )) && >&2 echo +fe-user-config+
     if [[ -e ~/.fe/config.sh ]] ; then
+        (( fe_config_verbose )) && >&2 echo . ~/.fe/config.sh
         . ~/.fe/config.sh
     fi
 }
 fe-dir-config () {
+    (( fe_config_verbose >= 2 )) && >&2 echo +fe-dir-config+
     local fe_config_path=".fe-config.sh"
     local fe_config_dir="."
     local fe_config_root=0
     local log_prefix="${PROGNAME}: fe-dir-config:"
     local DEBUG="${DEBUG:+$DEBUG}"
     while true ; do
+        (( fe_config_verbose >= 2 )) && >&2 echo \? "${fe_config_path}"
         if [[ -e "${fe_config_path}" ]] ; then
             (( DEBUG )) && >&2 echo "${log_prefix}: ${fe_config_path} found"
+            (( fe_config_verbose )) && >&2 echo . "${fe_config_path}"
             . "${fe_config_path}"
         else
             (( DEBUG )) && >&2 echo "${log_prefix}: ${fe_config_path} not found"
@@ -39,9 +46,11 @@ fe-dir-config () {
 
 # commands to be used in ~/.fe/config.sh and <dir>/.fe-config.sh
 fefind-option () {
+    (( fe_config_verbose )) && >&2 echo "add fefind options: $@"
     fefind_config_options+=("$@")
 }
 fegrep-option () {
+    (( fe_config_verbose )) && >&2 echo "add fegrep options: $@"
     fegrep_config_options+=("$@")
 }
 
