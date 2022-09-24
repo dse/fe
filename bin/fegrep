@@ -140,7 +140,9 @@ get-options () {
                 fefind_ops+=(-ls);;
             'verbose')
                 fefind_command+=("--verbose")
-                verbose=$((verbose + 1));;
+                verbose=$((verbose + 1))
+                # >&2 echo "fefind: verbose=${verbose}"
+                ;;
             'dry-run')
                 fefind_command+=("--dry-run")
                 dry_run=1;;
