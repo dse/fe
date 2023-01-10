@@ -134,220 +134,234 @@ main () {
     exec ${find_command+"${find_command[@]}"}
 }
 
+add-directory-exclude () {
+    directory_excludes+=("$@")
+}
+add-file-exclude () {
+    file_excludes+=("$@")
+}
+add-binary-file-exclude () {
+    binary_file_excludes+=("$@")
+}
+add-quasi-binary-file-exclude () {
+    file_excludes+=("$@")
+}
+
 add-directory-excludes () {
-    directory_excludes+=(
-        'vendor'
-        'node_modules'
-        '.cache'
-        '.cpan'
 
-        # version control
-        '.git'
-        '.svn'
+    add-directory-exclude 'vendor'
+    add-directory-exclude 'node_modules'
+    add-directory-exclude '.cache'
+    add-directory-exclude '.cpan'
+    add-directory-exclude 'npm-cache'
 
-        # others from emacs grep.el
-        'SCCS'
-        'RCS'
-        'CVS'
-        'MCVS'
-        '.src'
-        '.hg'
-        '.bzr'
-        '_MTN'
-        '_darcs'
-        '{arch}'
-        '.sass-cache'
+    # version control
+    add-directory-exclude '.git'
+    add-directory-exclude '.svn'
 
-        # BigCommerce
-        'parsed/templates'
-        'parsed/scss'
+    # others from emacs grep.el
+    add-directory-exclude 'SCCS'
+    add-directory-exclude 'RCS'
+    add-directory-exclude 'CVS'
+    add-directory-exclude 'MCVS'
+    add-directory-exclude '.src'
+    add-directory-exclude '.hg'
+    add-directory-exclude '.bzr'
+    add-directory-exclude '_MTN'
+    add-directory-exclude '_darcs'
+    add-directory-exclude '{arch}'
+    add-directory-exclude '.sass-cache'
 
-        # emacs
-        'elpa'
+    # BigCommerce
+    add-directory-exclude 'parsed/templates'
+    add-directory-exclude 'parsed/scss'
 
-        # etc.
-        'zip-cache'
-    )
+    # emacs
+    add-directory-exclude 'elpa'
+
+    # etc.
+    add-directory-exclude 'zip-cache'
+
 }
 
 add-file-excludes () {
-    file_excludes+=(
-        # backups
-        '*~'
-        '#*#'
-        '.*~'
-        '.#*'
-        '*.bak'
-        '*.tmp'
-        '*.old'
-        '*.orig'
-        '*.bak.*'
-        '*.tmp.*'
-        '*.old.*'
-        '*.orig.*'
 
-        # archives
-        '*.zip'
-        '*.jar'
-        '*.sym'
+    # backups
+    add-file-exclude '*~'
+    add-file-exclude '#*#'
+    add-file-exclude '.*~'
+    add-file-exclude '.#*'
+    add-file-exclude '*.bak'
+    add-file-exclude '*.tmp'
+    add-file-exclude '*.old'
+    add-file-exclude '*.orig'
+    add-file-exclude '*.bak.*'
+    add-file-exclude '*.tmp.*'
+    add-file-exclude '*.old.*'
+    add-file-exclude '*.orig.*'
 
-        # compressed files
-        '*.gz'
+    # archives
+    add-file-exclude '*.zip'
+    add-file-exclude '*.jar'
+    add-file-exclude '*.sym'
 
-        # minified/map files
-        '*.min'
-        '*.min.*'
-        '*.css.map'
-        '*.js.map'
-        '*.min.map'
-        'composer.lock'
-        '*.bundle.js'
-        '*.chunk.js'
+    # compressed files
+    add-file-exclude '*.gz'
 
-        # BigCommerce minified
-        'theme-bundle.main.js'
-        'theme.scss.json'
-        'assets/dist/report.html'
-        'parsed/lang.json'
-        'theme-bundle.chunk.*.js'
-        'theme-bundle.head_async.js'
+    # minified/map files
+    add-file-exclude '*.min'
+    add-file-exclude '*.min.*'
+    add-file-exclude '*.css.map'
+    add-file-exclude '*.js.map'
+    add-file-exclude '*.min.map'
+    add-file-exclude 'composer.lock'
+    add-file-exclude '*.bundle.js'
+    add-file-exclude '*.chunk.js'
 
-        # projectile
-        'projectile.cache'
+    # BigCommerce minified
+    add-file-exclude 'theme-bundle.main.js'
+    add-file-exclude 'theme.scss.json'
+    add-file-exclude 'assets/dist/report.html'
+    add-file-exclude 'parsed/lang.json'
+    add-file-exclude 'theme-bundle.chunk.*.js'
+    add-file-exclude 'theme-bundle.head_async.js'
 
-        # emacs
-        'ido.last'
-    )
+    # projectile
+    add-file-exclude 'projectile.cache'
+
+    # emacs
+    add-file-exclude 'ido.last'
+
 }
 
 add-binary-file-excludes () {
-    file_excludes+=(
-        # images
-        '*.gif'
-        '*.jpg'
-        '*.jpeg'
-        '*.png'
-        '*.webp'
 
-        # fonts
-        '*.ttf'
-        '*.otf'
-        '*.ttc'
-        '*.woff'
-        '*.eot'
+    # images
+    add-binary-file-exclude '*.gif'
+    add-binary-file-exclude '*.jpg'
+    add-binary-file-exclude '*.jpeg'
+    add-binary-file-exclude '*.png'
+    add-binary-file-exclude '*.webp'
 
-        # executables and libraries
-        '*.exe'
-        '*.a'
-        '*.o'
-        '*.so'
-        '*.dll'
-        '*.dylib'
+    # fonts
+    add-binary-file-exclude '*.ttf'
+    add-binary-file-exclude '*.otf'
+    add-binary-file-exclude '*.ttc'
+    add-binary-file-exclude '*.woff'
+    add-binary-file-exclude '*.eot'
 
-        # Legacy Microsoft Office
-        '*.doc'
-        '*.ppt'
-        '*.xls'
+    # executables and libraries
+    add-binary-file-exclude '*.exe'
+    add-binary-file-exclude '*.a'
+    add-binary-file-exclude '*.o'
+    add-binary-file-exclude '*.so'
+    add-binary-file-exclude '*.dll'
+    add-binary-file-exclude '*.dylib'
 
-        # Media
-        '*.mov'
-        '*.m4a'
-        '*.qt'
-        '*.wma'
-        '*.mp3'
-        '*.m4r'
-        '*.flv'
-        '*.wmv'
-        '*.swf'
+    # Legacy Microsoft Office
+    add-binary-file-exclude '*.doc'
+    add-binary-file-exclude '*.ppt'
+    add-binary-file-exclude '*.xls'
 
-        # Dalvik
-        '*.dex'
+    # Media
+    add-binary-file-exclude '*.mov'
+    add-binary-file-exclude '*.m4a'
+    add-binary-file-exclude '*.qt'
+    add-binary-file-exclude '*.wma'
+    add-binary-file-exclude '*.mp3'
+    add-binary-file-exclude '*.m4r'
+    add-binary-file-exclude '*.flv'
+    add-binary-file-exclude '*.wmv'
+    add-binary-file-exclude '*.swf'
 
-        # Java
-        '*.class'
+    # Dalvik
+    add-binary-file-exclude '*.dex'
 
-        # Misc.
-        '*.bin'
-        '*.lbin'
-        '*.flat'
+    # Java
+    add-binary-file-exclude '*.class'
 
-        # Others from emacs grep.el.  I'm assuming these are binary
-        # formats.
-        '*.ln'
-        '*.blg'
-        '*.bbl'
-        '*.elc'
-        '*.lof'
-        '*.glo'
-        '*.idx'
-        '*.lot'
-        '*.fmt'
-        '*.tfm'
-        '*.fas'
-        '*.lib'
-        '*.mem'
-        '*.x86f'
-        '*.sparcf'
-        '*.dfsl'
-        '*.pfsl'
-        '*.d64fsl'
-        '*.p64fsl'
-        '*.lx64fsl'
-        '*.lx32fsl'
-        '*.dx64fsl'
-        '*.dx32fsl'
-        '*.fx64fsl'
-        '*.fx32fsl'
-        '*.sx64fsl'
-        '*.sx32fsl'
-        '*.wx64fsl'
-        '*.wx32fsl'
-        '*.fasl'
-        '*.ufsl'
-        '*.fsl'
-        '*.dxl'
-        '*.lo'
-        '*.la'
-        '*.gmo'
-        '*.mo'
-        '*.toc'
-        '*.aux'
-        '*.cp'
-        '*.fn'
-        '*.ky'
-        '*.pg'
-        '*.tp'
-        '*.vr'
-        '*.cps'
-        '*.fns'
-        '*.kys'
-        '*.pgs'
-        '*.tps'
-        '*.vrs'
-        '*.pyc'
-        '*.pyo'
-        '*.ri'
+    # Misc.
+    add-binary-file-exclude '*.bin'
+    add-binary-file-exclude '*.lbin'
+    add-binary-file-exclude '*.flat'
 
-        # anroid lol
-        '*.apk'
-        '*.aab'
-        '*.dex'
-        '*.ap_'
-    )
+    # Others from emacs grep.el.  I'm assuming these are binary
+    # formats.
+    add-binary-file-exclude '*.ln'
+    add-binary-file-exclude '*.blg'
+    add-binary-file-exclude '*.bbl'
+    add-binary-file-exclude '*.elc'
+    add-binary-file-exclude '*.lof'
+    add-binary-file-exclude '*.glo'
+    add-binary-file-exclude '*.idx'
+    add-binary-file-exclude '*.lot'
+    add-binary-file-exclude '*.fmt'
+    add-binary-file-exclude '*.tfm'
+    add-binary-file-exclude '*.fas'
+    add-binary-file-exclude '*.lib'
+    add-binary-file-exclude '*.mem'
+    add-binary-file-exclude '*.x86f'
+    add-binary-file-exclude '*.sparcf'
+    add-binary-file-exclude '*.dfsl'
+    add-binary-file-exclude '*.pfsl'
+    add-binary-file-exclude '*.d64fsl'
+    add-binary-file-exclude '*.p64fsl'
+    add-binary-file-exclude '*.lx64fsl'
+    add-binary-file-exclude '*.lx32fsl'
+    add-binary-file-exclude '*.dx64fsl'
+    add-binary-file-exclude '*.dx32fsl'
+    add-binary-file-exclude '*.fx64fsl'
+    add-binary-file-exclude '*.fx32fsl'
+    add-binary-file-exclude '*.sx64fsl'
+    add-binary-file-exclude '*.sx32fsl'
+    add-binary-file-exclude '*.wx64fsl'
+    add-binary-file-exclude '*.wx32fsl'
+    add-binary-file-exclude '*.fasl'
+    add-binary-file-exclude '*.ufsl'
+    add-binary-file-exclude '*.fsl'
+    add-binary-file-exclude '*.dxl'
+    add-binary-file-exclude '*.lo'
+    add-binary-file-exclude '*.la'
+    add-binary-file-exclude '*.gmo'
+    add-binary-file-exclude '*.mo'
+    add-binary-file-exclude '*.toc'
+    add-binary-file-exclude '*.aux'
+    add-binary-file-exclude '*.cp'
+    add-binary-file-exclude '*.fn'
+    add-binary-file-exclude '*.ky'
+    add-binary-file-exclude '*.pg'
+    add-binary-file-exclude '*.tp'
+    add-binary-file-exclude '*.vr'
+    add-binary-file-exclude '*.cps'
+    add-binary-file-exclude '*.fns'
+    add-binary-file-exclude '*.kys'
+    add-binary-file-exclude '*.pgs'
+    add-binary-file-exclude '*.tps'
+    add-binary-file-exclude '*.vrs'
+    add-binary-file-exclude '*.pyc'
+    add-binary-file-exclude '*.pyo'
+    add-binary-file-exclude '*.ri'
+
+    # anroid lol
+    add-binary-file-exclude '*.apk'
+    add-binary-file-exclude '*.aab'
+    add-binary-file-exclude '*.dex'
+    add-binary-file-exclude '*.ap_'
+
 }
 
 add-quasi-binary-file-excludes () {
-    file_excludes+=(
-        '*.doc'
-        '*.docx'
-        '*.xls'
-        '*.xlsx'
-        '*.ppt'
-        '*.pptx'
-        '*.pdf'
-        '*.ps'
-        '*.sfd'                 # FontForge fonts
-    )
+
+    add-file-exclude '*.doc'
+    add-file-exclude '*.docx'
+    add-file-exclude '*.xls'
+    add-file-exclude '*.xlsx'
+    add-file-exclude '*.ppt'
+    add-file-exclude '*.pptx'
+    add-file-exclude '*.pdf'
+    add-file-exclude '*.ps'
+    add-file-exclude '*.sfd'    # FontForge fonts
+
 }
 
 convert-file-excludes () {
