@@ -149,8 +149,22 @@ add-quasi-binary-file-exclude () {
 
 add-directory-excludes () {
 
-    add-directory-exclude 'vendor'
-    add-directory-exclude 'node_modules'
+    case "${PWD}" in
+        */vendor|*/vendor/*)
+            ;;
+        *)
+            add-directory-exclude 'vendor'
+            ;;
+    esac
+    
+    case "${PWD}" in
+        */node_modules|*/node_modules/*)
+            ;;
+        *)
+            add-directory-exclude 'node_modules'
+            ;;
+    esac
+
     add-directory-exclude '.cache'
     add-directory-exclude '.cpan'
     add-directory-exclude 'npm-cache'
