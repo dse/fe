@@ -27,6 +27,8 @@ utility.
 
 - `git grep`
 
+- `grep -I -r ... .`
+
 ## What do `fegrep` and `fefind` do, exactly?
 
 -   They are pretty heavy front-ends to `grep` and `find`.
