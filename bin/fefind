@@ -253,7 +253,21 @@ add-binary-file-excludes () {
     add-file-exclude '*.tar.*'
 
     # compressed files
+    add-file-exclude '*.br'
+    add-file-exclude '*.bz2'
+    add-file-exclude '*.genozip'
     add-file-exclude '*.gz'
+    add-file-exclude '*.lz'
+    add-file-exclude '*.lz4'
+    add-file-exclude '*.lzma'
+    add-file-exclude '*.lzo'
+    add-file-exclude '*.rz'
+    add-file-exclude '*.sfark'
+    add-file-exclude '*.sz'
+    add-file-exclude '*.xz'
+    add-file-exclude '*.z'
+    add-file-exclude '*.Z'
+    add-file-exclude '*.zst'
 
     # images
     add-binary-file-exclude '*.gif'
@@ -261,6 +275,7 @@ add-binary-file-excludes () {
     add-binary-file-exclude '*.jpeg'
     add-binary-file-exclude '*.png'
     add-binary-file-exclude '*.webp'
+    add-binary-file-exclude '*.heic'
 
     # fonts
     add-binary-file-exclude '*.ttf'
@@ -268,6 +283,7 @@ add-binary-file-excludes () {
     add-binary-file-exclude '*.ttc'
     add-binary-file-exclude '*.woff'
     add-binary-file-exclude '*.eot'
+    add-binary-file-exclude '*.pfb'
 
     # executables and libraries
     add-binary-file-exclude '*.exe'
