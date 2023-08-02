@@ -220,9 +220,13 @@ add-file-excludes () {
     add-file-exclude '*.css.map'
     add-file-exclude '*.js.map'
     add-file-exclude '*.min.map'
-    add-file-exclude 'composer.lock'
     add-file-exclude '*.bundle.js'
     add-file-exclude '*.chunk.js'
+
+    # simply huge
+    add-file-exclude 'package-lock.json'
+    add-file-exclude 'yarn.lock'
+    add-file-exclude 'composer.lock'
 
     # BigCommerce minified
     add-file-exclude 'theme-bundle.main.js'
@@ -246,6 +250,7 @@ add-binary-file-excludes () {
     add-file-exclude '*.zip'
     add-file-exclude '*.jar'
     add-file-exclude '*.sym'
+    add-file-exclude '*.tar.*'
 
     # compressed files
     add-file-exclude '*.gz'
