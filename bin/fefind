@@ -214,14 +214,6 @@ add-file-excludes () {
     add-file-exclude '*.old.*'
     add-file-exclude '*.orig.*'
 
-    # archives
-    add-file-exclude '*.zip'
-    add-file-exclude '*.jar'
-    add-file-exclude '*.sym'
-
-    # compressed files
-    add-file-exclude '*.gz'
-
     # minified/map files
     add-file-exclude '*.min'
     add-file-exclude '*.min.*'
@@ -249,6 +241,14 @@ add-file-excludes () {
 }
 
 add-binary-file-excludes () {
+
+    # compressed archives
+    add-file-exclude '*.zip'
+    add-file-exclude '*.jar'
+    add-file-exclude '*.sym'
+
+    # compressed files
+    add-file-exclude '*.gz'
 
     # images
     add-binary-file-exclude '*.gif'
