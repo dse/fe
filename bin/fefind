@@ -491,12 +491,30 @@ append-find-file-includes () {
 get-find-arguments () {
     local numargsin="$#"
     while (( $# )) ; do
+        # FIXME:
+        #
+        # why do some clauses have a "shift" cmd yet others don't?
         case "$1" in
             '--.js')
+                # https://www.npmjs.com/package/common-js-file-extensions
                 append-find-file-includes "*.js"
                 append-find-file-includes "*.mjs"
                 append-find-file-includes "*.cjs"
                 append-find-file-includes "*.jsx"
+                append-find-file-includes "*.es6"
+                append-find-file-includes "*.es"
+                append-find-file-includes "*.iced"
+                append-find-file-includes "*.liticed"
+                append-find-file-includes "*.iced.md"
+                append-find-file-includes "*.cs"
+                append-find-file-includes "*.coffee"
+                append-find-file-includes "*.litcoffee"
+                append-find-file-includes "*.coffee.md"
+                append-find-file-includes "*.ts"
+                append-find-file-includes "*.tsx"
+                append-find-file-includes "*.ls"
+                append-find-file-includes "*.sjs"
+                append-find-file-includes "*.eg"
                 ;;
             '--.html')
                 append-find-file-includes "*.htm"
