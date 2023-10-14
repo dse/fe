@@ -24,6 +24,7 @@ main () {
     local files_without_match=0
     local files_with_matches=0
     local fecolumn=0
+    local exclude_quasi_binaries=1
 
     local matcher=''                                                    # '', '-E', '-F', '-G', or '-P'
     local matcher_long=''                                               # '', '--extended-regexp', autc.
@@ -36,7 +37,7 @@ main () {
     local -a fefind_options=()
     local -a fefind_ops=()                                              # -ls, -fls /dev/stderr, etc.
     local -a fefind_exclude_binaries=(--exclude-binaries)
-    local -a fefind_exclude_quasi_binaries=()
+    local -a fefind_exclude_quasi_binaries=(--exclude-quasi-binary-files)
     local -a fefind_all_directories=()
     local -a fefind_all_files=()
 
@@ -97,6 +98,15 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
+    long_line_filter="................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+    long_line_filter="${long_line_filter}................................"
+
     if (( as_shell )) ; then
         shell-echo-find-cmd "${fefind_command[@]}"
         exit
@@ -105,11 +115,11 @@ main () {
         >&2 shell-echo-find-cmd "${fefind_command[@]}"
     fi
     if (( dry_run )) ; then
-        exec "${fefind_command[@]}"
+        "${fefind_command[@]}"
     fi
 
     # do the thing
-    exec "${fefind_command[@]}"
+    exec "${fefind_command[@]}" | grep -v "${long_line_filter}"
 }
 
 get-options () {
