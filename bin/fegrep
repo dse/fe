@@ -98,6 +98,8 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
+    declare -a filter_long_lines_command=(awk 'length($0) <= 1024')
+
     if (( as_shell )) ; then
         shell-echo-find-cmd "${fefind_command[@]}"
         exit
@@ -110,7 +112,7 @@ main () {
     fi
 
     # do the thing
-    exec "${fefind_command[@]}" | awk 'length($0) <= 1024'
+    exec "${fefind_command[@]}" | "${filter_long_lines_command[@]}"
 }
 
 get-options () {
