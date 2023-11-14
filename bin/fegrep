@@ -110,7 +110,7 @@ main () {
     fi
 
     # do the thing
-    exec "${fefind_command[@]}" | awk 'length($0) <= 256'
+    exec "${fefind_command[@]}" | awk 'length($0) <= 1024'
 }
 
 get-options () {
