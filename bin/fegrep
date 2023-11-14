@@ -18,7 +18,6 @@ main () {
     local dry_run=0
     local all=0
     local context_flag=0
-    local as_shell=0
     local as_flat=0
 
     local files_without_match=0
@@ -100,17 +99,12 @@ main () {
 
     declare -a filter_long_lines_command=(awk 'length($0) <= 1024')
 
-    if (( as_shell )) ; then
-        echo "${fefind_command[@]}"
-        echo "${filter_long_lines_command[@]}"
-        exit
-    fi
     if (( dry_run || verbose )) ; then
         echo "${fefind_command[@]}"
         echo "${filter_long_lines_command[@]}"
     fi
     if (( dry_run )) ; then
-        "${fefind_command[@]}"
+        exit
     fi
 
     # do the thing
@@ -133,9 +127,6 @@ get-options () {
             # fegrep(1) options --- long ones only
             'help')
                 usage; exit 0;;
-            'shell'|'as-shell')
-                fefind_command+=("--as-shell")
-                as_shell=1;;
             'flat'|'flatten'|'as-flat')
                 fefind_command+=("--as-flat")
                 as_flat=1;;
@@ -428,7 +419,7 @@ usage:
 options:
     -h, --help                      display this message
     -v, --verbose                   verbosity
-    -n, --dry-run                   dry run
+    -n, --dry-run                   take no action; output commands
         --non-ascii
         --non-ascii-printable
         --css-class='<class>'
@@ -438,7 +429,6 @@ options:
         --include-binaries          include binary files in grep
         --exclude-quasi-binaries    exclude pdf/ps/office/etc. docs
         --include-quasi-binaries    include pdf/ps/office/etc. docs (default)
-        --as-shell                  output shell command for copy/pasting
         --exclude-path=<glob>       specify appropriate \! -ipath args. to find
         --ls                    list files to stdout
         --fls=<filename>        list files to <filename> (e.g., /dev/stderr)

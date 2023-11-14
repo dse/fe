@@ -20,7 +20,6 @@ main () {
     local include_all_directories=0
     local include_all_files=0
     local all=0
-    local as_shell=0
     local as_flat=0
 
     local -a initial_global_options=() # ones that must be specified first
@@ -119,10 +118,6 @@ main () {
     find_command+=(${find_file_includes+"${find_file_includes[@]}"})
     find_command+=("$@")
 
-    if (( as_shell )) ; then
-        echo "${find_command[@]@Q}"
-        exit
-    fi
     if (( dry_run || verbose )) ; then
         echo "${find_command[@]@Q}"
     fi
@@ -664,10 +659,6 @@ get-find-arguments () {
                 shift
                 dry_run=1
                 ;;
-            '--shell'|'--as-shell')
-                shift
-                as_shell=1
-                ;;
             '--flat'|'--flatten'|'--as-flat')
                 shift
                 as_flat=1
@@ -886,7 +877,7 @@ usage:
 options:
     --help                      display this message
     --verbose                   verbosity
-    --dry-run                   dry run
+    --dry-run                   take no action; output commands
     --exclude-binaries          exclude binary files from results
     --include-binaries          include binary files in results (default)
     --exclude-quasi-binaries    exclude pdf/ps/office/etc. docs
@@ -895,7 +886,6 @@ options:
     --all-files                 remove default file exclusions
     --exclude=<glob>            specify additional files to exclude
     --exclude-dir=<glob>        specify additional directories to exclude
-    --as-shell                  output shell command for copy/pasting
     --exclude-path=<glob>       specify appropriate \! -ipath args. to find
 options passed to find:
     -O <level>              enable query optimization
