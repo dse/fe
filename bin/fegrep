@@ -101,11 +101,13 @@ main () {
     declare -a filter_long_lines_command=(awk 'length($0) <= 1024')
 
     if (( as_shell )) ; then
-        shell-echo-find-cmd "${fefind_command[@]}"
+        echo "${fefind_command[@]}"
+        echo "${filter_long_lines_command[@]}"
         exit
     fi
     if (( dry_run || verbose )) ; then
-        >&2 shell-echo-find-cmd "${fefind_command[@]}"
+        echo "${fefind_command[@]}"
+        echo "${filter_long_lines_command[@]}"
     fi
     if (( dry_run )) ; then
         "${fefind_command[@]}"

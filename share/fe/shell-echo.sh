@@ -4,33 +4,6 @@ shell-echo () {
     echo "$@"
 }
 
-shell-echo-find-cmd () {
-    echo -n '+ '
-    local arg
-    local space=''           # echo space before next argument if on same line
-    local indent='  '
-    local -a indentstack=()
-    local dim=''
-    local reset=''
-    if [[ -t 1 ]] ; then
-        dim=$'\e''[2m'
-        reset=$'\e''[m'
-    fi
-    for arg ; do
-        case "${arg}" in
-            '(')                     __open  "\\(";;
-            ')')                     __close "\\)";;
-            '!')                     __arg   "\\!";;
-            ';')                     __arg   "\\;";;
-            '-o')                    __or    "-o";;
-            '{}')                    __arg "${arg}";;
-            *[^-+,./0-9:=@A-Z_a-z]*) __arg "${arg@Q}";;
-            *)                       __arg "${arg}";;
-        esac
-    done
-    echo
-}
-
 __open () {
     local arg="$1"
     indentstack+=("$indent")

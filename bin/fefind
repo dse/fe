@@ -120,11 +120,11 @@ main () {
     find_command+=("$@")
 
     if (( as_shell )) ; then
-        shell-echo-find-cmd "${find_command[@]}"
+        echo "${find_command[@]@Q}"
         exit
     fi
     if (( dry_run || verbose )) ; then
-        >&2 shell-echo-find-cmd "${find_command[@]}"
+        echo "${find_command[@]@Q}"
     fi
     if (( dry_run )) ; then
         exit
