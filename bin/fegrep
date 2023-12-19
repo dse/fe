@@ -18,16 +18,15 @@ main () {
     local dry_run=0
     local all=0
     local context_flag=0
-    local as_shell=0
     local as_flat=0
 
-    local fancy=0
     local files_without_match=0
     local files_with_matches=0
-    local fefancy_options=()
+    local fecolumn=0
+    local exclude_quasi_binaries=1
 
-    local matcher=''                           # '', '-E', '-F', '-G', or '-P'
-    local matcher_long=''                      # '', '--extended-regexp', autc.
+    local matcher=''                                                    # '', '-E', '-F', '-G', or '-P'
+    local matcher_long=''                                               # '', '--extended-regexp', autc.
     local matcher_required=''
     local matcher_required_long=''
     local matcher_conflict_source=''
@@ -37,12 +36,14 @@ main () {
     local -a fefind_options=()
     local -a fefind_ops=()                                              # -ls, -fls /dev/stderr, etc.
     local -a fefind_exclude_binaries=(--exclude-binaries)
-    local -a fefind_exclude_quasi_binaries=()
+    local -a fefind_exclude_quasi_binaries=(--exclude-quasi-binary-files)
     local -a fefind_all_directories=()
     local -a fefind_all_files=()
 
     local -a fefind_config_options=()
     local -a fegrep_config_options=()
+
+    local -a fefind_command=(fefind)
 
     fe-config
     set -- ${fegrep_config_options+"${fefind_config_options[@]}"} "$@"
@@ -78,14 +79,6 @@ main () {
         grep_options+=(--color -n -H)
     fi
 
-    local -a fefind_command=()
-    fefind_command+=("fefind")
-    if (( as_shell )) ; then
-        fefind_command+=("--as-shell")
-    fi
-    if (( as_flat )) ; then
-        fefind_command+=("--as-flat")
-    fi
     fefind_command+=(${fefind_exclude_binaries+"${fefind_exclude_binaries[@]}"})
     fefind_command+=(${fefind_exclude_quasi_binaries+"${fefind_exclude_quasi_binaries[@]}"})
     fefind_command+=(${fefind_all_directories+"${fefind_all_directories[@]}"})
@@ -104,50 +97,18 @@ main () {
     fefind_command+=(${grep_patterns+"${grep_patterns[@]}"})
     fefind_command+=({} +)
 
-    if ( echo "${@@Q}" ) >/dev/null 2>/dev/null ; then
-        if (( dry_run )) ; then
-            >&2 echo "+ ${fefind_command[@]@Q}"
-            if (( fancy )) ; then
-                >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
-            fi
-            exit 1
-        fi
-        if (( verbose )) ; then
-            >&2 echo "+ ${fefind_command[@]@Q}"
-            if (( fancy )) ; then
-                >&2 echo "+ fefancy ${fefancy_options[@]@Q}"
-            fi
-        fi
-    else
-        if (( dry_run )) ; then
-            >&2 echo "+ ${fefind_command[@]}"
-            if (( fancy )) ; then
-                >&2 echo "+ fefancy ${fefancy_options[@]}"
-            fi
-            exit 1
-        fi
-        if (( verbose )) ; then
-            >&2 echo "+ ${fefind_command[@]}"
-            if (( fancy )) ; then
-                >&2 echo "+ fefancy ${fefancy_options[@]}"
-            fi
-        fi
+    declare -a filter_long_lines_command=(awk 'length($0) <= 1024')
+
+    if (( dry_run || verbose )) ; then
+        echo "${fefind_command[@]}"
+        echo "${filter_long_lines_command[@]}"
+    fi
+    if (( dry_run )) ; then
+        exit
     fi
 
-    if (( as_shell )) ; then
-        shell_echo_comment=1
-        shell-echo "${THIS_COMMAND[@]}"
-        shell-echo-nl
-        shell_echo_comment=0
-    fi
-
-    if (( fancy == 2 )) ; then
-        "${fefind_command[@]}" | fefancy --kitty "${fefancy_options[@]}"
-    elif (( fancy )) ; then
-        "${fefind_command[@]}" | fefancy "${fefancy_options[@]}"
-    else
-        exec "${fefind_command[@]}"
-    fi
+    # do the thing
+    exec "${fefind_command[@]}" | "${filter_long_lines_command[@]}"
 }
 
 get-options () {
@@ -156,7 +117,7 @@ get-options () {
     local options=''
     options="${options}"'EFGP'                            # matcher options
     options="${options}"'ivwxcLloqsbHhnTuZaIUz'           # taking no arguments
-    options="${options}"'e:f:m:A:B:C:.:'                  # taking arguments
+    options="${options}"'e:f:m:A:B:C:.:X:'                # taking arguments
     options="${options}"'rRD:d:'                          # taking no effect
     options="${options}"'-:'                              # this comes last
 
@@ -166,17 +127,20 @@ get-options () {
             # fegrep(1) options --- long ones only
             'help')
                 usage; exit 0;;
-            'shell'|'as-shell')
-                as_shell=1;;
             'flat'|'flatten'|'as-flat')
+                fefind_command+=("--as-flat")
                 as_flat=1;;
             'fls')
                 require-argument "$@"; fefind_ops+=(-fls "${OPTARG}");;
             'ls')
                 fefind_ops+=(-ls);;
             'verbose')
-                verbose=$((verbose + 1));;
+                fefind_command+=("--verbose")
+                verbose=$((verbose + 1))
+                # >&2 echo "fefind: verbose=${verbose}"
+                ;;
             'dry-run')
+                fefind_command+=("--dry-run")
                 dry_run=1;;
             'non-ascii')
                 add-non-ascii-pattern;;
@@ -206,6 +170,14 @@ get-options () {
                 require-argument "$@"; fefind_options+=(-mindepth "${OPTARG}");;
             'maxdepth'|'max-depth')
                 require-argument "$@"; fefind_options+=(-maxdepth "${OPTARG}");;
+            'mtime')
+                require-argument "$@"
+                :
+                ;;
+            'mmin')
+                require-argument "$@"
+                :
+                ;;
             'all')
                 fefind_options+=(--all);;
 
@@ -229,8 +201,8 @@ get-options () {
             'b'|'byte-offset')              grep_options+=(-b);;
             'H'|'with-filename')            grep_options+=(-H);;
             'h'|'no-filename')              grep_options+=(-h);;
-            'n'|'line-number')              grep_options+=(-n); fefancy_options+=(--line-number);;
-            'T'|'initial-tab')              grep_options+=(-T); fefancy_options+=(--initial-tab);;
+            'n'|'line-number')              grep_options+=(-n);;
+            'T'|'initial-tab')              grep_options+=(-T);;
             'u'|'unix-byte-offsets')        grep_options+=(-u);;
             'Z'|'null')                     grep_options+=(-Z);;
             'a'|'text')                     grep_options+=(-a);;
@@ -260,6 +232,11 @@ get-options () {
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
             'include'|'grep-include')       require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
+            'X')                            require-argument "$@"; fefind_options+=(
+                                                --exclude="${OPTARG}"
+                                                --exclude-dir="${OPTARG}"
+                                            );;
+
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
@@ -268,11 +245,23 @@ get-options () {
             'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            'fancy')                        turn-fancy-on 1;;
-            'kitty')                        turn-fancy-on 2;;
-            'number-nonblank')              fefancy_options+=(--number-nonblank);;
-
             '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
+
+            '.js')
+                grep_options+=(
+                    --include="*.js"
+                    --include="*.mjs"
+                    --include="*.cjs"
+                    --include="*.jsx"
+                );;
+
+            '.html')
+                grep_options+=(
+                    --include="*.htm"
+                    --include="*.html"
+                    --include="*.xhtml"
+                    --include="*.php"
+                );;
 
             # long grep(1) options taking optional arguments
             'color')
@@ -300,17 +289,14 @@ get-options () {
 
 after-context () {
     grep_options+=(-A "${1}")
-    fefancy_options+=(--context)
 }
 
 before-context () {
     grep_options+=(-B "${1}")
-    fefancy_options+=(--context)
 }
 
 context () {
     grep_options+=(-C "${1}")
-    fefancy_options+=(--context)
 }
 
 choose-matcher () {
@@ -415,38 +401,12 @@ require-perl-regexp-matcher () {
     esac
 }
 
-turn-fancy-on () {
-    local fancyValue="$1"; shift
-
-    if (( files_without_match )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
-        exit 1
-    fi
-    if (( files_with_matches )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
-        exit 1
-    fi
-
-    grep_options+=(-T)                                          # --initial-tab
-    fancy="${fancyValue}"
-}
-
 files-without-match () {
-    if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-without-match incompatible with --fancy or --kitty"
-        exit 1
-    fi
-
     files_without_match=1
     grep_options+=(-L)
 }
 
 files-with-matches () {
-    if (( fancy )) ; then
-        >&2 echo "${PROGNAME}: --files-with-matches incompatible with --fancy or --kitty"
-        exit 1
-    fi
-
     files_with_matches=1
     grep_options+=(-l)
 }
@@ -459,7 +419,7 @@ usage:
 options:
     -h, --help                      display this message
     -v, --verbose                   verbosity
-    -n, --dry-run                   dry run
+    -n, --dry-run                   take no action; output commands
         --non-ascii
         --non-ascii-printable
         --css-class='<class>'
@@ -469,7 +429,6 @@ options:
         --include-binaries          include binary files in grep
         --exclude-quasi-binaries    exclude pdf/ps/office/etc. docs
         --include-quasi-binaries    include pdf/ps/office/etc. docs (default)
-        --as-shell                  output shell command for copy/pasting
         --exclude-path=<glob>       specify appropriate \! -ipath args. to find
         --ls                    list files to stdout
         --fls=<filename>        list files to <filename> (e.g., /dev/stderr)
@@ -530,6 +489,16 @@ options passed to fefind
     --all-files                  ignore default file exclusions
     --exclude-binaries           exclude binary files from results (default)
     --include-binaries           include binary files in results
+fe config file load order:
+    ~/.fe/config.sh
+    .fe-config.sh
+    ../.fe-config.sh
+    ../../.fe-config.sh
+    etc.
+config file contents:
+    # -*- mode: sh; sh-shell: bash -*-
+    fefind-option -<option> --<option> ...
+    fegrep-option -<option> --<option> ...
 EOF
 
 ###############################################################################

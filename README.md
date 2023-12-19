@@ -27,3 +27,21 @@ utility.
 
 - `git grep`
 
+- `grep -I -r ... .`
+
+## What do `fegrep` and `fefind` do, exactly?
+
+-   They are pretty heavy front-ends to `grep` and `find`.
+
+-   It handles file and directory exclusions better.
+
+-   It has built-in common pattern searches such as `--non-ascii` and
+    `--css-class`.
+
+-   The ability to allow otherwise excluded file and directory
+    patterns
+
+## What's wrong with heavy front-ends?
+
+-   To pass along options to `grep`, you have to specify each one
+    individually.
