@@ -192,10 +192,10 @@ add-directory-excludes () {
     add-directory-exclude 'zip-cache'
 
     # nytprof
-    'nytprof'
+    add-directory-exclude 'nytprof'
 
     # etc.
-    'zip-cache'
+    add-directory-exclude 'zip-cache'
 }
 
 add-file-excludes () {
