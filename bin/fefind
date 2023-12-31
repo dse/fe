@@ -191,6 +191,11 @@ add-directory-excludes () {
     # etc.
     add-directory-exclude 'zip-cache'
 
+    # nytprof
+    'nytprof'
+
+    # etc.
+    'zip-cache'
 }
 
 add-file-excludes () {
@@ -237,6 +242,11 @@ add-file-excludes () {
     # emacs
     add-file-exclude 'ido.last'
 
+    # nytprof
+    'nytprof.out'
+
+    # emacs
+    'ido.last'
 }
 
 add-binary-file-excludes () {
