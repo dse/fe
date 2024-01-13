@@ -10,24 +10,53 @@ utility.
 
 ## There are others.
 
-- [https://beyondgrep.com/](`ack-grep`)
+-   [ack](https://beyondgrep.com/)
+-   [ag - the Silver Searcher](https://geoff.greer.fm/ag/)
+-   [ast-grep](https://github.com/ast-grep/ast-grep)
+-   [cgrep](https://awgn.github.io/cgrep/)
+-   [git grep](https://git-scm.com/docs/git-grep)
+-   [glark](https://github.com/jpace/glark)
+-   [grab](https://github.com/stealth/grab)
+-   [greple](https://github.com/kaz-utashiro/greple)
+-   [grin](https://pypi.python.org/pypi/grin)
+-   [paragrep](https://software.clapper.org/paragrep/)
+-   [pss](https://github.com/eliben/pss/) - an ack clone
+-   [pt - the Platinum Searcher](https://github.com/monochromegane/the_platinum_searcher)
+-   [qgrep](https://github.com/zeux/qgrep)
+-   [rak](https://github.com/danlucraft/rak) - an ack clone
+-   [rg - ripgrep](https://github.com/BurntSushi/ripgrep)
+-   [rga](https://github.com/phiresky/ripgrep-all) - ripgrep, but also searches PDFs, ebooks, Office documents, `.zip` and `.tar.gz` files, and more.
+-   [sift](https://sift-tool.org/)
+-   [spot](https://github.com/rauchg/spot)
+-   [ucg - UniversalCodeGrep](https://github.com/gvansickle/ucg)
+-   [ugrep](https://github.com/Genivia/ugrep)
 
-- [https://geoff.greer.fm/ag/](`ag`, the Silver Searcher)
+## There is also good ole' grep.
 
-- [https://github.com/BurntSushi/ripgrep](`ripgrep`)
+-   `-I` excludes binary files.
+-   `-r` recurses into subdirectories without following symlinks.
+    -   If you want to follow symlinks, a potentially bad idea,
+        specify `-R`.
+-   You probably also want to specify:
+    -   `--exclude-dir=node_modules`
+    -   `--exclude-dir=.git`
+-   You may want:
+    -   `--exclude=\*.pdf`
+    -   `--exclude=\*.doc`
+    -   `--exclude=\*.xls`
+    -   `--exclude=\*.ppt`
+    
+### Manpages
 
-- [https://sift-tool.org/](`sift`)
+-   [gnu grep](https://www.gnu.org/software/grep/)
+-   [FreeBSD grep](https://man.freebsd.org/cgi/man.cgi?grep(1))
+-   [OpenBSD grep](https://man.openbsd.org/grep.1)
+-   [Linux grep(1)](https://man7.org/linux/man-pages/man1/grep.1.html)
 
-- [https://github.com/monochromegane/the_platinum_searcher](`pt`, the Platinum Searcher)
+## Tool Lists
 
-- Other tools listed in:
-
-  - <https://beyondgrep.com/more-tools/>
-  - <https://github.com/BurntSushi/ripgrep#quick-examples-comparing-tools>
-
-- `git grep`
-
-- `grep -I -r ... .`
+-   <https://beyondgrep.com/more-tools/>
+-   <https://github.com/BurntSushi/ripgrep#quick-examples-comparing-tools>
 
 ## What do `fegrep` and `fefind` do, exactly?
 
