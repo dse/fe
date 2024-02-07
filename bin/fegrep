@@ -241,14 +241,27 @@ get-options () {
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
             'X'|'!')
+                # -X.js   -!.js
+                # -X\*.js -!\*.js
                 require-argument "$@"
-                fefind_options+=(
-                    --exclude="${OPTARG}"
-                    --exclude-dir="${OPTARG}"
-                )
+                case "${OPTARG}" in
+                    .*)
+                        fefind_options+=(
+                            --exclude="*${OPTARG}"
+                            --exclude-dir="*${OPTARG}"
+                        )
+                        ;;
+                    *)
+                        fefind_options+=(
+                            --exclude="${OPTARG}"
+                            --exclude-dir="${OPTARG}"
+                        )
+                        ;;
+                esac
                 ;;
 
             '.')
+                # -.js
                 require-argument "$@"
                 grep_options+=(
                     --include="*.${OPTARG}"
