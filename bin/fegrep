@@ -117,7 +117,7 @@ get-options () {
     local options=''
     options="${options}"'EFGP'                            # matcher options
     options="${options}"'ivwxcLloqsbHhnTuZaIUz'           # taking no arguments
-    options="${options}"'e:f:m:A:B:C:.:X:!:'              # taking arguments
+    options="${options}"'e:f:m:A:B:C:.:X:'                # taking arguments
     options="${options}"'rRD:d:'                          # taking no effect
     options="${options}"'-:'                              # this comes last
 
@@ -240,9 +240,9 @@ get-options () {
             'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            'X'|'!')
-                # -X.js   -!.js
-                # -X\*.js -!\*.js
+            'X')
+                # -X.js
+                # -X\*.js
                 require-argument "$@"
                 case "${OPTARG}" in
                     .*)
