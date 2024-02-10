@@ -4,8 +4,58 @@ set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
+declare -a exclude_dirs=(
+    \! \( -type d -name .git -prune \)
+    \! \( -type d -name node_modules -prune \)
+    \! \( -type d -name _cacache -prune \)
+    \! \( -type d -name .node-gyp -prune \)
+    \! \( -type d -name vendor -prune \)
+)
+
 main () {
-    "${0%/*}/fe" -l '' "$@"
+
+    # parse documents in the same way find does.
+    declare -a find_options=()
+    while (( $# )) ; do
+        case "$1" in
+            -P|-L|-H)
+                find_options+=("$1")
+                shift
+                ;;
+            -D|-O)
+                if (( $# < 2 )) ; then
+                    echo "option missing required argument - $1"
+                    exit 1
+                fi
+                find_options+=("$1" "$2")
+                shift 2
+                ;;
+            -D*|-O*)
+                find_options+=("$1")
+                shift
+                ;;
+            *)
+                # ends options; starting point arguments follow
+                break
+                ;;
+        esac
+    done
+    declare -a find_targets=()
+    while (( $# )) ; do
+        case "$1" in
+            "!"|"("|-*)
+                # ends starting points; find expression follows
+                break
+                ;;
+            *)
+                find_targets+=("$1")
+                shift
+                ;;
+        esac
+    done
+    declare -a find_expr="$@"
+
+    exec find "${find_options[@]}" "${find_options[@]}" "${exclude_dirs[@]}" "${find_expr[@]}"
 }
 
 main "$@"
