@@ -4,8 +4,16 @@ set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
+declare -a exclude_dirs=(
+    --exclude-dir=.git
+    --exclude-dir=node_modules
+    --exclude-dir=_cacache
+    --exclude-dir=.node-gyp
+    --exclude-dir=vendor
+)
+
 main () {
-    grep -I -r --exclude-dir=.git --exclude-dir=node_modules "$@"
+    grep -I -r "${exclude_dirs[@]}" "$@"
 }
 
 main "$@"
