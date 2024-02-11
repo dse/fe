@@ -5,7 +5,7 @@ set -o nounset
 shopt -s lastpipe
 
 main () {
-    grep -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+    "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
 }
 
 declare -a grep_options=()
@@ -14,6 +14,11 @@ if [[ "${TERM}" = "emacs-grep" ]] ; then
     grep_options+=(--color=auto -nH --null)
 elif [[ -v INSIDE_EMACS ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
     grep_options+=(--color=auto -nH --null)
+fi
+
+grep=grep
+if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin" ]] && type -P ggrep >/dev/null ; then
+    grep=ggrep
 fi
 
 declare -a exclude_dirs=(
