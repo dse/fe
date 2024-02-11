@@ -5,8 +5,8 @@ set -o nounset
 shopt -s lastpipe
 
 main () {
+    # parse command line arguments in the same way find does.
 
-    # parse documents in the same way find does.
     declare -a find_options=()
     while (( $# )) ; do
         case "$1" in
@@ -32,6 +32,7 @@ main () {
                 ;;
         esac
     done
+
     declare -a find_targets=()
     while (( $# )) ; do
         case "$1" in
@@ -45,9 +46,10 @@ main () {
                 ;;
         esac
     done
+
     declare -a find_expr="$@"
 
-    exec find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" "${exclude_files}" "${find_expr[@]}"
+    exec find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" -type f "${exclude_files}" "${find_expr[@]}"
 }
 
 declare -a exclude_dirs=(
