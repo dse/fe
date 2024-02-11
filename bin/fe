@@ -325,6 +325,10 @@ declare -a exclude_files=(
     --exclude='*.par'
     --exclude='*.par2'
     --exclude='*.rev'
+
+    # bloat
+    --exclude='*.min'
+    --exclude='*.min.*'
 )
 
 list_excludes () {

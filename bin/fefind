@@ -325,6 +325,10 @@ declare -a exclude_files=(
     \! -name '*.par'
     \! -name '*.par2'
     \! -name '*.rev'
+
+    # bloat
+    \! -name '*.min'
+    \! -name '*.min.*'
 )
 
 main "$@"
