@@ -27,8 +27,6 @@ declare -a grep_options=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
     grep_options+=(--color=auto -nH --null)
-elif [[ -v INSIDE_EMACS ]] && [[ -n "${INSIDE_EMACS}" ]] ; then
-    grep_options+=(--color=auto -nH --null)
 fi
 
 grep=grep
