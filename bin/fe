@@ -395,6 +395,9 @@ fe --help
 fe --list-excludes
 fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
    [--allow-excludes]
+   [--print-command]
+   [--non-ascii]
+   [--html-css-class]
 "; }
 
 main "$@"
