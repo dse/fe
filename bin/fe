@@ -15,6 +15,18 @@ main () {
                 print_help
                 exit 0
                 ;;
+            --grep)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --grep"
+                    exit 1
+                fi
+                grep="$2"
+                shift 2
+                ;;
+            --grep=*)
+                grep="${1#*=}"
+                shift
+                ;;
             *)
                 break
                 ;;
@@ -345,7 +357,7 @@ list_excludes () {
 print_help () { echo -n "\
 fe --help
 fe --list-excludes
-fe [<grep-options> ...] [<files> ...]
+fe [--grep=<cmd>] [<grep-options> ...] [<files> ...]
 "; }
 
 main "$@"
