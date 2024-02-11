@@ -64,6 +64,14 @@ declare -a exclude_dirs=(
 declare -a exclude_files=(
     \! -name '*~'
     \! -name '#*#'
+    \! -name '*.tmp'
+    \! -name '*.bak'
+    \! -name '*.orig'
+    \! -name '*.old'
+    \! -name '*.tmp.*'
+    \! -name '*.bak.*'
+    \! -name '*.orig.*'
+    \! -name '*.old.*'
 
     # executable
     \! -name '*.exe'

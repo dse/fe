@@ -48,6 +48,14 @@ declare -a exclude_dirs=(
 declare -a exclude_files=(
     --exclude='*~'
     --exclude='#*#'
+    --exclude='*.tmp'
+    --exclude='*.bak'
+    --exclude='*.orig'
+    --exclude='*.old'
+    --exclude='*.tmp.*'
+    --exclude='*.bak.*'
+    --exclude='*.orig.*'
+    --exclude='*.old.*'
 
     # executable
     --exclude='*.exe'
