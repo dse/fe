@@ -78,6 +78,49 @@ if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin" ]] && type -P ggrep >/dev/null ;
     grep=ggrep
 fi
 
+list_excludes () {
+    echo "# directories"
+    for i in "${exclude_dirs[@]}" ; do
+        case "${i}" in
+            --exclude=*|--exclude-dir=*)
+                echo "${i#*=}"
+                ;;
+            *)
+                echo "${i}"
+                ;;
+        esac
+    done | if [[ -t 1 ]] ; then
+        fmt
+    else
+        cat
+    fi
+    echo "# files"
+    for i in "${exclude_files[@]}" ; do
+        case "${i}" in
+            --exclude=*|--exclude-dir=*)
+                echo "${i#*=}"
+                ;;
+            *)
+                echo "${i}"
+                ;;
+        esac
+    done | if [[ -t 1 ]] ; then
+        fmt
+    else
+        cat
+    fi
+}
+
+print_help () { echo -n "\
+fe --help
+fe --list-excludes
+fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
+   [--allow-excludes]
+   [--print-command]
+   [--non-ascii]
+   [--html-css-class]
+"; }
+
 declare -a exclude_dirs=(
     --exclude-dir=.git
     --exclude-dir=node_modules
@@ -356,48 +399,5 @@ declare -a exclude_files=(
     --exclude='*.min'
     --exclude='*.min.*'
 )
-
-list_excludes () {
-    echo "# directories"
-    for i in "${exclude_dirs[@]}" ; do
-        case "${i}" in
-            --exclude=*|--exclude-dir=*)
-                echo "${i#*=}"
-                ;;
-            *)
-                echo "${i}"
-                ;;
-        esac
-    done | if [[ -t 1 ]] ; then
-        fmt
-    else
-        cat
-    fi
-    echo "# files"
-    for i in "${exclude_files[@]}" ; do
-        case "${i}" in
-            --exclude=*|--exclude-dir=*)
-                echo "${i#*=}"
-                ;;
-            *)
-                echo "${i}"
-                ;;
-        esac
-    done | if [[ -t 1 ]] ; then
-        fmt
-    else
-        cat
-    fi
-}
-
-print_help () { echo -n "\
-fe --help
-fe --list-excludes
-fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
-   [--allow-excludes]
-   [--print-command]
-   [--non-ascii]
-   [--html-css-class]
-"; }
 
 main "$@"
