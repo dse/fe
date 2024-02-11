@@ -4,6 +4,10 @@ set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
+main () {
+    grep -I -r "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+}
+
 declare -a exclude_dirs=(
     --exclude-dir=.git
     --exclude-dir=node_modules
@@ -270,9 +274,5 @@ declare -a exclude_files=(
     --exclude='*.par2'
     --exclude='*.rev'
 )
-
-main () {
-    grep -I -r "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
-}
 
 main "$@"
