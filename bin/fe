@@ -44,7 +44,7 @@ main () {
                 )
                 shift
                 ;;
-            --css-class)
+            --html-css-class)
                 grep_patterns+=(
                     -e '[Cc][Ll][Aa][Ss][Ss][ \t]*=[ \t]*("[^"]*"|'\''[^'\'']*'\''|[^<>[:space:]]+)'
                 )
