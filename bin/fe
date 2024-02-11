@@ -37,7 +37,7 @@ main () {
                 ;;
         esac
     done
-    "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+    exec "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
 }
 
 declare -a grep_options=()
