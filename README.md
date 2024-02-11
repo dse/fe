@@ -1,8 +1,10 @@
 # fe, the iron searcher
 
-`fe` is a recursive file search tool that mostly leverages `grep`.
+`fe` is a recursive file search tool that leverages `grep`.
 
-Its semantics are quite simple and well-defined.
+I wrote this because I needed something with simple, well-defined
+semantics that I controlled.  I also needed something I could use with
+numerous `grep` options.
 
 ## Directory and File Exclusions
 
