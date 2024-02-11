@@ -39,7 +39,15 @@ main () {
                 shift
                 ;;
             --non-ascii)
-                grep_patterns+=(-e "[^[:space:][:graph:][:cntrl:]]")
+                grep_patterns+=(
+                    -e "[^[:space:][:graph:][:cntrl:]]"
+                )
+                shift
+                ;;
+            --css-class)
+                grep_patterns+=(
+                    -e '[Cc][Ll][Aa][Ss][Ss][ \t]*=[ \t]*("[^"]*"|'\''[^'\'']*'\''|[^<>[:space:]]+)'
+                )
                 shift
                 ;;
             *)
