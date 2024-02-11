@@ -4,6 +4,8 @@
 
 Its semantics are quite simple and well-defined.
 
+## Directory and File Exclusions
+
 `fe` excludes certain directories you probably don't want to include
 from searches, including but not limited to:
 
@@ -21,10 +23,29 @@ want to include, including but not limited to:
 -   archive and/or compression formats
 -   error correction formats
 
+## MacOS
+
 In macOS, if a `ggrep` executable is found, it will use that instead
 of the operating system's `grep`.
+
+## Emacs
 
 If invoked from `emacs`, it will set output options that emacs will
 recognize and process.  If you use `M-x grep` and use `fe`, you do not
 need to specify those options.
 
+## Handy Search Patterns
+
+`fe` also provides a few options that specify handy patterns to search
+for:
+
+-   `--non-ascii`.  Requies `-E`, `-G` (the default), or `-P`.
+
+-   `--html-css-class`.  Requires `-E` or `-P`.
+
+None of these patterns specify `-E`, `-F`, `-G`, or `-P`; you must
+specify it yourself.
+
+If you use any of these, then you must use `-e` to specify any
+additional patterns.  You need not, and must not, specify `-e` before
+any of *these* pattern options, however.
