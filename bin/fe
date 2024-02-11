@@ -4,9 +4,15 @@ set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
+declare -i print_command=0
+
 main () {
     while (( $# )) ; do
         case "$1" in
+            --print-command)
+                print_command=1
+                shift
+                ;;
             --allow-excludes)
                 exclude_dirs=()
                 exclude_files=()
@@ -37,7 +43,14 @@ main () {
                 ;;
         esac
     done
-    exec "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+    declare -a command=(
+        "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+    )
+    if (( print_command )) ; then
+        echo "${command[@]@Q}"
+    else
+        exec "${command[@]}"
+    fi
 }
 
 declare -a grep_options=()
