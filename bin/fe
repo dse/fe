@@ -38,13 +38,17 @@ main () {
                 grep="${1#*=}"
                 shift
                 ;;
+            --non-ascii)
+                grep_patterns+=(-e "[^[:space:][:graph:][:cntrl:]]")
+                shift
+                ;;
             *)
                 break
                 ;;
         esac
     done
     declare -a command=(
-        "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "$@"
+        "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "${grep_patterns[@]}" "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
@@ -54,6 +58,7 @@ main () {
 }
 
 declare -a grep_options=()
+declare -a grep_patterns=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
     # invoked from M-x grep, either directly or indirectly
