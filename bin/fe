@@ -43,6 +43,7 @@ main () {
 declare -a grep_options=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
+    # invoked from M-x grep, either directly or indirectly
     grep_options+=(--color=auto -nH --null)
 fi
 
