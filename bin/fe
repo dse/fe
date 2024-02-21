@@ -7,6 +7,10 @@ shopt -s lastpipe
 declare -i print_command=0
 
 main () {
+    # add colors by default if stdout is a tty; can be turned off layer
+    if [[ -t 1 ]] ; then
+        grep_options+=(--color=always)
+    fi
     while (( $# )) ; do
         case "$1" in
             --print-command)
