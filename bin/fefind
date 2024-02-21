@@ -4,7 +4,21 @@ set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
+declare -i print_command=0
+
 main () {
+    while (( $# )) ; do
+        case "$1" in
+            --print-command)
+                print_command=1
+                shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
     # parse command line arguments in the same way find does.
 
     declare -a find_options=()
@@ -47,9 +61,14 @@ main () {
         esac
     done
 
-    declare -a find_expr="$@"
-
-    exec find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" -type f "${exclude_files}" "${find_expr[@]}"
+    declare -a command=(
+        find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" -type f "${exclude_files[@]}" "$@"
+    )
+    if (( print_command )) ; then
+        echo "${command[@]@Q}"
+    else
+        exec "${command[@]}"
+    fi
 }
 
 declare -a exclude_dirs=(
@@ -329,6 +348,9 @@ declare -a exclude_files=(
     # bloat
     \! -name '*.min'
     \! -name '*.min.*'
+    \! -name 'package-lock.json'
+    \! -name 'composer.lock'
+    \! -name 'yarn.lock'
 )
 
 main "$@"
