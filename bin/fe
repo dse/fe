@@ -127,10 +127,15 @@ print_help () { echo -n "\
 fe --help
 fe --list-excludes
 fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
+   [--print-command]
+   [--list-excludes]
    [--allow-excludes]
    [--print-command]
    [--non-ascii]
    [--html-css-class]
+   [-.<ext>]           exclude *.<ext>
+   [+.<ext>]           include *.<ext>
+NOTE: fe options must come before grep options.
 "; }
 
 declare -a exclude_dirs=(
