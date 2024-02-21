@@ -418,6 +418,7 @@ declare -a exclude_files=(
     --exclude='package-lock.json'
     --exclude='composer.lock'
     --exclude='yarn.lock'
+    --exclude='*.log'
 )
 
 main "$@"
