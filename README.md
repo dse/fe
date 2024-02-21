@@ -25,6 +25,14 @@ want to include, including but not limited to:
 -   archive and/or compression formats
 -   error correction formats
 
+To print a list of directory and file exclusions:
+
+    fe --list-excludes
+    
+There are many.  To print each on its own line:
+
+    fe --list-excludes | cat
+
 ## MacOS
 
 In macOS, if a `ggrep` executable is found, it will use that instead
