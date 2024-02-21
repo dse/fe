@@ -50,6 +50,10 @@ main () {
                 )
                 shift
                 ;;
+            -.*)
+                grep_options+=(--include="*${1#-}")
+                shift
+                ;;
             *)
                 break
                 ;;
@@ -398,6 +402,9 @@ declare -a exclude_files=(
     # bloat
     --exclude='*.min'
     --exclude='*.min.*'
+    --exclude='package-lock.json'
+    --exclude='composer.lock'
+    --exclude='yarn.lock'
 )
 
 main "$@"
