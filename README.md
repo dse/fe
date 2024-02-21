@@ -28,7 +28,7 @@ want to include, including but not limited to:
 ## MacOS
 
 In macOS, if a `ggrep` executable is found, it will use that instead
-of the operating system's `grep`.
+of the operating system's `grep`.  I'm thinking about undoing this.
 
 ## Emacs
 
