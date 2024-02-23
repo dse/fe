@@ -104,35 +104,13 @@ fi
 
 list_excludes () {
     echo "# directories"
-    for i in "${exclude_dirs[@]}" ; do
-        case "${i}" in
-            --exclude=*|--exclude-dir=*)
-                echo "${i#*=}"
-                ;;
-            *)
-                echo "${i}"
-                ;;
-        esac
-    done | if [[ -t 1 ]] ; then
-        fmt
-    else
-        cat
-    fi
+    for i in "${exclude_dirs[@]#--*=}" ; do
+        echo "$i"
+    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
     echo "# files"
-    for i in "${exclude_files[@]}" ; do
-        case "${i}" in
-            --exclude=*|--exclude-dir=*)
-                echo "${i#*=}"
-                ;;
-            *)
-                echo "${i}"
-                ;;
-        esac
-    done | if [[ -t 1 ]] ; then
-        fmt
-    else
-        cat
-    fi
+    for i in "${exclude_files[@]#--*=}" ; do
+        echo "$i"
+    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
 }
 
 print_help () { echo -n "\
