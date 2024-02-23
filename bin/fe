@@ -103,14 +103,11 @@ if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin" ]] && type -P ggrep >/dev/null ;
 fi
 
 list_excludes () {
+    local IFS=$'\n'
     echo "# directories"
-    for i in "${exclude_dirs[@]#--*=}" ; do
-        echo "$i"
-    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
+    echo "${exclude_dirs[*]#--*=}" | if [[ -t 1 ]] ; then fmt ; else cat ; fi
     echo "# files"
-    for i in "${exclude_files[@]#--*=}" ; do
-        echo "$i"
-    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
+    echo "${exclude_files[*]#--*=}" | if [[ -t 1 ]] ; then fmt ; else cat ; fi
 }
 
 print_help () { echo -n "\
