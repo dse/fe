@@ -7,8 +7,8 @@ shopt -s lastpipe
 declare -i print_command=0
 
 main () {
-    # add colors by default if stdout is a tty; can be turned off layer
     if [[ -t 1 ]] ; then
+        # add colors by default if stdout is a tty; can be turned off layer
         grep_options+=(--color=always)
     fi
     while (( $# )) ; do
@@ -40,6 +40,18 @@ main () {
                 ;;
             --grep=*)
                 grep="${1#*=}"
+                shift
+                ;;
+            --allow)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --allow"
+                    exit 1
+                fi
+                allow "$2"
+                shift 2
+                ;;
+            --allow=*)
+                allow "${1#*=}"
                 shift
                 ;;
             --non-ascii)
@@ -137,6 +149,33 @@ fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
    [+.<ext>]           include *.<ext>
 NOTE: fe options must come before grep options.
 "; }
+
+# exclude_from array_variable value ...
+delete_from_excludes () {
+    local varname="$1"; shift
+    local -n var="${varname}"
+    local -a new_array=()
+    local i
+    local j
+    for i in "${var[@]}" ; do
+        for j in "$@" ; do
+            for k in "--exclude=$j" "--exclude-dir=$j" ; do
+                if [[ "$i" == "$k" ]] ; then
+                    continue 3
+                fi
+            done
+        done
+        new_array+=("$i")
+    done
+    var=("${new_array[@]}")
+}
+
+allow () {
+    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
+    delete_from_excludes exclude_dirs "$@"
+    delete_from_excludes exclude_files "$@"
+    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
+}
 
 declare -a exclude_dirs=(
     --exclude-dir=.git
