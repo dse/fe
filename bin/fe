@@ -429,6 +429,8 @@ declare -a exclude_files=(
     # bloat
     --exclude='*.min'
     --exclude='*.min.*'
+    --exclude='*.bundle'
+    --exclude='*.bundle.*'
     --exclude='package-lock.json'
     --exclude='composer.lock'
     --exclude='yarn.lock'
