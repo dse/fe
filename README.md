@@ -44,6 +44,8 @@ If invoked from `emacs`, it will set output options that emacs will
 recognize and process.  If you use `M-x grep` and use `fe`, you do not
 need to specify those options.
 
+    (setq grep-find-command "fe ")
+
 ## Handy Search Patterns
 
 `fe` also provides a few options that specify handy patterns to search
