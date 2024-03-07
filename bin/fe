@@ -66,12 +66,59 @@ main () {
                 )
                 shift
                 ;;
+            -.html)
+                grep_options+=(
+                    --include="*.xhtml"
+                    --include="*.html"
+                    --include="*.htm"
+                    --include="*.php"
+                )
+                shift
+                ;;
+            -.css)
+                grep_options+=(
+                    --include="*.css"
+                    --include="*.scss"
+                )
+                shift
+                ;;
+            -.js)
+                grep_options+=(
+                    --include="*.js"
+                    --include="*.mjs"
+                    --include="*.cjs"
+                    --include="*.jsx"
+                    --include="*.es6"
+                    --include="*.es"
+                    --include="*.iced"
+                    --include="*.liticed"
+                    --include="*.iced.md"
+                    --include="*.cs"
+                    --include="*.coffee"
+                    --include="*.litcoffee"
+                    --include="*.coffee.md"
+                    --include="*.ts"
+                    --include="*.tsx"
+                    --include="*.ls"
+                    --include="*.sjs"
+                    --include="*.eg"
+                )
+                shift
+                ;;
             -.*)
                 grep_options+=(--include="*${1#-}")
                 shift
                 ;;
+            --.*)
+                grep_options+=(--include="*${1#--}")
+                shift
+                ;;
             +.*)
-                grep_options+=(--exclude="*${1#-}")
+                grep_options+=(--exclude="*${1#+}")
+                shift
+                ;;
+            ++.*)
+                grep_options+=(--exclude="*${1#++}")
                 shift
                 ;;
             *)
