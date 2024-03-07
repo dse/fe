@@ -135,19 +135,19 @@ main () {
                 shift
                 ;;
             -.*)
-                user_include_files_add "*.${1#-.}"
+                user_include_files+=(--include="*.${1#-.}")
                 shift
                 ;;
             --.*)               # --.html only adds .html, for example
-                user_include_files_add "*.${1#--.}"
+                user_include_files+=(--include="*.${1#--.}")
                 shift
                 ;;
             +.*)
-                user_exclude_files_add "*.${1#+.}"
+                user_exclude_files+=(--exclude="*.${1#+.}")
                 shift
                 ;;
             ++.*)
-                user_exclude_files_add "*.${1#++.}"
+                user_exclude_files+=(--exclude="*.${1#++.}")
                 shift
                 ;;
             *)
