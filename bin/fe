@@ -196,8 +196,8 @@ fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
    [--print-command]
    [--non-ascii]
    [--html-css-class]
-   [-.<ext>]           exclude *.<ext>
-   [+.<ext>]           include *.<ext>
+   [-.<ext>]           include *.<ext>
+   [+.<ext>]           exclude *.<ext>
 NOTE: fe options must come before grep options.
 "; }
 
