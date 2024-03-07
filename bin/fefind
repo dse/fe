@@ -15,6 +15,10 @@ main () {
                 print_command=1
                 shift
                 ;;
+            --list-excludes)
+                list_excludes
+                exit 0
+                ;;
             -.html)
                 user_include_files+=(-o -name "*.xhtml")
                 user_include_files+=(-o -name "*.html")
@@ -160,6 +164,18 @@ main () {
     else
         exec "${command[@]}"
     fi
+}
+
+list_excludes () {
+    local i
+    echo "# directories"
+    for (( i = 5; i <= ${#exclude_dirs[@]}; i += 8 )) ; do
+        echo "${exclude_dirs[$i]}"
+    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
+    echo "# files"
+    for (( i = 2; i <= ${#exclude_files[@]}; i += 3 )) ; do
+        echo "${exclude_files[$i]}"
+    done | if [[ -t 1 ]] ; then fmt ; else cat ; fi
 }
 
 declare -a exclude_dirs=(
