@@ -463,6 +463,9 @@ declare -a exclude_files=(
     \! -name 'composer.lock'
     \! -name 'yarn.lock'
     \! -name '*.log'
+    \! -name '*.css.map'
+    \! -name '*.js.map'
+    \! -name '*.min.map'
 )
 
 main "$@"
