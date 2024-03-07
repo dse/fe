@@ -5,7 +5,8 @@ set -o nounset
 shopt -s lastpipe
 
 declare -i print_command=0
-declare -a include_files=()
+declare -a user_exclude_files=()
+declare -a user_include_files=()
 
 main () {
     while (( $# )) ; do
@@ -15,44 +16,85 @@ main () {
                 shift
                 ;;
             -.html)
-                include_files_add "*.xhtml"
-                include_files_add "*.html"
-                include_files_add "*.htm"
-                include_files_add "*.php"
+                user_include_files_add "*.xhtml"
+                user_include_files_add "*.html"
+                user_include_files_add "*.htm"
+                user_include_files_add "*.php"
                 shift
                 ;;
             -.css)
-                include_files_add "*.css"
-                include_files_add "*.scss"
+                user_include_files_add "*.css"
+                user_include_files_add "*.scss"
                 shift
                 ;;
             -.js)
-                include_files_add "*.js"
-                include_files_add "*.mjs"
-                include_files_add "*.cjs"
-                include_files_add "*.jsx"
-                include_files_add "*.es6"
-                include_files_add "*.es"
-                include_files_add "*.iced"
-                include_files_add "*.liticed"
-                include_files_add "*.iced.md"
-                include_files_add "*.cs"
-                include_files_add "*.coffee"
-                include_files_add "*.litcoffee"
-                include_files_add "*.coffee.md"
-                include_files_add "*.ts"
-                include_files_add "*.tsx"
-                include_files_add "*.ls"
-                include_files_add "*.sjs"
-                include_files_add "*.eg"
+                user_include_files_add "*.js"
+                user_include_files_add "*.mjs"
+                user_include_files_add "*.cjs"
+                user_include_files_add "*.jsx"
+                user_include_files_add "*.es6"
+                user_include_files_add "*.es"
+                user_include_files_add "*.iced"
+                user_include_files_add "*.liticed"
+                user_include_files_add "*.iced.md"
+                user_include_files_add "*.cs"
+                user_include_files_add "*.coffee"
+                user_include_files_add "*.litcoffee"
+                user_include_files_add "*.coffee.md"
+                user_include_files_add "*.ts"
+                user_include_files_add "*.tsx"
+                user_include_files_add "*.ls"
+                user_include_files_add "*.sjs"
+                user_include_files_add "*.eg"
+                shift
+                ;;
+            +.html)
+                user_exclude_files_add "*.xhtml"
+                user_exclude_files_add "*.html"
+                user_exclude_files_add "*.htm"
+                user_exclude_files_add "*.php"
+                shift
+                ;;
+            +.css)
+                user_exclude_files_add "*.css"
+                user_exclude_files_add "*.scss"
+                shift
+                ;;
+            +.js)
+                user_exclude_files_add "*.js"
+                user_exclude_files_add "*.mjs"
+                user_exclude_files_add "*.cjs"
+                user_exclude_files_add "*.jsx"
+                user_exclude_files_add "*.es6"
+                user_exclude_files_add "*.es"
+                user_exclude_files_add "*.iced"
+                user_exclude_files_add "*.liticed"
+                user_exclude_files_add "*.iced.md"
+                user_exclude_files_add "*.cs"
+                user_exclude_files_add "*.coffee"
+                user_exclude_files_add "*.litcoffee"
+                user_exclude_files_add "*.coffee.md"
+                user_exclude_files_add "*.ts"
+                user_exclude_files_add "*.tsx"
+                user_exclude_files_add "*.ls"
+                user_exclude_files_add "*.sjs"
+                user_exclude_files_add "*.eg"
                 shift
                 ;;
             -.*)
-                include_files_add "*.${1#-.}"
+                user_include_files_add "*.${1#-.}"
                 shift
                 ;;
             --.*)               # --.html only adds .html, for example
-                include_files_add "*.${1#--.}"
+                user_include_files_add "*.${1#--.}"
+                shift
+                ;;
+            +.*)
+                user_exclude_files_add "*.${1#+.}"
+                shift
+                ;;
+            ++.*)
+                user_exclude_files_add "*.${1#++.}"
                 shift
                 ;;
             *)
@@ -103,12 +145,14 @@ main () {
         esac
     done
 
-    if (( ${#include_files[@]} )) ; then
-        include_files+=(')')
+    # File exclusions work a bit differently, so we don't need to do
+    # this for them.
+    if (( ${#user_include_files[@]} )) ; then
+        user_include_files+=(')')
     fi
 
     declare -a command=(
-        find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" -type f "${include_files[@]}" "${exclude_files[@]}" "$@"
+        find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" -type f "${user_include_files[@]}" "${user_exclude_files[@]}" "${exclude_files[@]}" "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
@@ -117,15 +161,22 @@ main () {
     fi
 }
 
-include_files_add () {
+user_include_files_add () {
     local i
     for i ; do
-        if (( ${#include_files[@]} )) ; then
-            include_files+=(-o)
+        if (( ${#user_include_files[@]} )) ; then
+            user_include_files+=(-o)
         else
-            include_files+=('(')
+            user_include_files+=('(')
         fi
-        include_files+=(-name "$i")
+        user_include_files+=(-name "$i")
+    done
+}
+
+user_exclude_files_add () {
+    local i
+    for i ; do
+        user_exclude_files+=('!' -name "$i")
     done
 }
 
