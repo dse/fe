@@ -106,19 +106,19 @@ main () {
                 shift
                 ;;
             -.*)
-                grep_options+=(--include="*${1#-}")
+                grep_options+=(--include="*.${1#-.}")
                 shift
                 ;;
             --.*)
-                grep_options+=(--include="*${1#--}")
+                grep_options+=(--include="*.${1#--.}")
                 shift
                 ;;
             +.*)
-                grep_options+=(--exclude="*${1#+}")
+                grep_options+=(--exclude="*.${1#+.}")
                 shift
                 ;;
             ++.*)
-                grep_options+=(--exclude="*${1#++}")
+                grep_options+=(--exclude="*.${1#++.}")
                 shift
                 ;;
             *)
