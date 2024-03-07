@@ -189,15 +189,14 @@ list_excludes () {
 print_help () { echo -n "\
 fe --help
 fe --list-excludes
-fe [--grep=<cmd>]     [<grep-options> ...] [<files> ...]
+fe [--grep=<cmd>]           [<grep-options> ...] [<files> ...]
    [--print-command]
-   [--list-excludes]
    [--allow-excludes]
    [--print-command]
    [--non-ascii]
    [--html-css-class]
-   [-.<ext>]           include *.<ext>
-   [+.<ext>]           exclude *.<ext>
+   [-.<ext>]  [+.<ext>]     include/exclude *.<ext> (html, css, js are special)
+   [--.<ext>] [++.<ext>]    non-special include/exclude
 NOTE: fe options must come before grep options.
 "; }
 
