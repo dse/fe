@@ -16,85 +16,85 @@ main () {
                 shift
                 ;;
             -.html)
-                user_include_files_add "*.xhtml"
-                user_include_files_add "*.html"
-                user_include_files_add "*.htm"
-                user_include_files_add "*.php"
+                user_include_files+=(-o -name "*.xhtml")
+                user_include_files+=(-o -name "*.html")
+                user_include_files+=(-o -name "*.htm")
+                user_include_files+=(-o -name "*.php")
                 shift
                 ;;
             -.css)
-                user_include_files_add "*.css"
-                user_include_files_add "*.scss"
+                user_include_files+=(-o -name "*.css")
+                user_include_files+=(-o -name "*.scss")
                 shift
                 ;;
             -.js)
-                user_include_files_add "*.js"
-                user_include_files_add "*.mjs"
-                user_include_files_add "*.cjs"
-                user_include_files_add "*.jsx"
-                user_include_files_add "*.es6"
-                user_include_files_add "*.es"
-                user_include_files_add "*.iced"
-                user_include_files_add "*.liticed"
-                user_include_files_add "*.iced.md"
-                user_include_files_add "*.cs"
-                user_include_files_add "*.coffee"
-                user_include_files_add "*.litcoffee"
-                user_include_files_add "*.coffee.md"
-                user_include_files_add "*.ts"
-                user_include_files_add "*.tsx"
-                user_include_files_add "*.ls"
-                user_include_files_add "*.sjs"
-                user_include_files_add "*.eg"
+                user_include_files+=(-o -name "*.js")
+                user_include_files+=(-o -name "*.mjs")
+                user_include_files+=(-o -name "*.cjs")
+                user_include_files+=(-o -name "*.jsx")
+                user_include_files+=(-o -name "*.es6")
+                user_include_files+=(-o -name "*.es")
+                user_include_files+=(-o -name "*.iced")
+                user_include_files+=(-o -name "*.liticed")
+                user_include_files+=(-o -name "*.iced.md")
+                user_include_files+=(-o -name "*.cs")
+                user_include_files+=(-o -name "*.coffee")
+                user_include_files+=(-o -name "*.litcoffee")
+                user_include_files+=(-o -name "*.coffee.md")
+                user_include_files+=(-o -name "*.ts")
+                user_include_files+=(-o -name "*.tsx")
+                user_include_files+=(-o -name "*.ls")
+                user_include_files+=(-o -name "*.sjs")
+                user_include_files+=(-o -name "*.eg")
                 shift
                 ;;
             +.html)
-                user_exclude_files_add "*.xhtml"
-                user_exclude_files_add "*.html"
-                user_exclude_files_add "*.htm"
-                user_exclude_files_add "*.php"
+                user_exclude_files+=(\! -name "*.xhtml")
+                user_exclude_files+=(\! -name "*.html")
+                user_exclude_files+=(\! -name "*.htm")
+                user_exclude_files+=(\! -name "*.php")
                 shift
                 ;;
             +.css)
-                user_exclude_files_add "*.css"
-                user_exclude_files_add "*.scss"
+                user_exclude_files+=(\! -name "*.css")
+                user_exclude_files+=(\! -name "*.scss")
                 shift
                 ;;
             +.js)
-                user_exclude_files_add "*.js"
-                user_exclude_files_add "*.mjs"
-                user_exclude_files_add "*.cjs"
-                user_exclude_files_add "*.jsx"
-                user_exclude_files_add "*.es6"
-                user_exclude_files_add "*.es"
-                user_exclude_files_add "*.iced"
-                user_exclude_files_add "*.liticed"
-                user_exclude_files_add "*.iced.md"
-                user_exclude_files_add "*.cs"
-                user_exclude_files_add "*.coffee"
-                user_exclude_files_add "*.litcoffee"
-                user_exclude_files_add "*.coffee.md"
-                user_exclude_files_add "*.ts"
-                user_exclude_files_add "*.tsx"
-                user_exclude_files_add "*.ls"
-                user_exclude_files_add "*.sjs"
-                user_exclude_files_add "*.eg"
+                user_exclude_files+=(\! -name "*.js")
+                user_exclude_files+=(\! -name "*.mjs")
+                user_exclude_files+=(\! -name "*.cjs")
+                user_exclude_files+=(\! -name "*.jsx")
+                user_exclude_files+=(\! -name "*.es6")
+                user_exclude_files+=(\! -name "*.es")
+                user_exclude_files+=(\! -name "*.iced")
+                user_exclude_files+=(\! -name "*.liticed")
+                user_exclude_files+=(\! -name "*.iced.md")
+                user_exclude_files+=(\! -name "*.cs")
+                user_exclude_files+=(\! -name "*.coffee")
+                user_exclude_files+=(\! -name "*.litcoffee")
+                user_exclude_files+=(\! -name "*.coffee.md")
+                user_exclude_files+=(\! -name "*.ts")
+                user_exclude_files+=(\! -name "*.tsx")
+                user_exclude_files+=(\! -name "*.ls")
+                user_exclude_files+=(\! -name "*.sjs")
+                user_exclude_files+=(\! -name "*.eg")
                 shift
                 ;;
             -.*)
-                user_include_files_add "*.${1#-.}"
+                user_include_files+=(-o -name "*.${1#-.}")
                 shift
                 ;;
             --.*)               # --.html only adds .html, for example
-                user_include_files_add "*.${1#--.}"
+                user_include_files+=(-o -name "*.${1#--.}")
                 shift
                 ;;
             +.*)
-                user_exclude_files_add "*.${1#+.}"
+                user_exclude_files+=(\! -name "*.${1#+.}")
                 shift
                 ;;
             ++.*)
-                user_exclude_files_add "*.${1#++.}"
+                user_exclude_files+=(\! -name "*.${1#++.}")
                 shift
                 ;;
             *)
@@ -148,6 +148,7 @@ main () {
     # File exclusions work a bit differently, so we don't need to do
     # this for them.
     if (( ${#user_include_files[@]} )) ; then
+        user_include_files[0]='('
         user_include_files+=(')')
     fi
 
@@ -159,25 +160,6 @@ main () {
     else
         exec "${command[@]}"
     fi
-}
-
-user_include_files_add () {
-    local i
-    for i ; do
-        if (( ${#user_include_files[@]} )) ; then
-            user_include_files+=(-o)
-        else
-            user_include_files+=('(')
-        fi
-        user_include_files+=(-name "$i")
-    done
-}
-
-user_exclude_files_add () {
-    local i
-    for i ; do
-        user_exclude_files+=('!' -name "$i")
-    done
 }
 
 declare -a exclude_dirs=(
