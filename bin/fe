@@ -5,6 +5,8 @@ set -o nounset
 shopt -s lastpipe
 
 declare -i print_command=0
+declare -a user_exclude_files=()
+declare -a user_include_files=()
 
 main () {
     if [[ -t 1 ]] ; then
@@ -67,58 +69,85 @@ main () {
                 shift
                 ;;
             -.html)
-                grep_options+=(
-                    --include="*.xhtml"
-                    --include="*.html"
-                    --include="*.htm"
-                    --include="*.php"
-                )
+                user_include_files_add "*.xhtml"
+                user_include_files_add "*.html"
+                user_include_files_add "*.htm"
+                user_include_files_add "*.php"
                 shift
                 ;;
             -.css)
-                grep_options+=(
-                    --include="*.css"
-                    --include="*.scss"
-                )
+                user_include_files_add "*.css"
+                user_include_files_add "*.scss"
                 shift
                 ;;
             -.js)
-                grep_options+=(
-                    --include="*.js"
-                    --include="*.mjs"
-                    --include="*.cjs"
-                    --include="*.jsx"
-                    --include="*.es6"
-                    --include="*.es"
-                    --include="*.iced"
-                    --include="*.liticed"
-                    --include="*.iced.md"
-                    --include="*.cs"
-                    --include="*.coffee"
-                    --include="*.litcoffee"
-                    --include="*.coffee.md"
-                    --include="*.ts"
-                    --include="*.tsx"
-                    --include="*.ls"
-                    --include="*.sjs"
-                    --include="*.eg"
-                )
+                user_include_files_add "*.js"
+                user_include_files_add "*.mjs"
+                user_include_files_add "*.cjs"
+                user_include_files_add "*.jsx"
+                user_include_files_add "*.es6"
+                user_include_files_add "*.es"
+                user_include_files_add "*.iced"
+                user_include_files_add "*.liticed"
+                user_include_files_add "*.iced.md"
+                user_include_files_add "*.cs"
+                user_include_files_add "*.coffee"
+                user_include_files_add "*.litcoffee"
+                user_include_files_add "*.coffee.md"
+                user_include_files_add "*.ts"
+                user_include_files_add "*.tsx"
+                user_include_files_add "*.ls"
+                user_include_files_add "*.sjs"
+                user_include_files_add "*.eg"
+                shift
+                ;;
+            +.html)
+                user_exclude_files_add "*.xhtml"
+                user_exclude_files_add "*.html"
+                user_exclude_files_add "*.htm"
+                user_exclude_files_add "*.php"
+                shift
+                ;;
+            +.css)
+                user_exclude_files_add "*.css"
+                user_exclude_files_add "*.scss"
+                shift
+                ;;
+            +.js)
+                user_exclude_files_add "*.js"
+                user_exclude_files_add "*.mjs"
+                user_exclude_files_add "*.cjs"
+                user_exclude_files_add "*.jsx"
+                user_exclude_files_add "*.es6"
+                user_exclude_files_add "*.es"
+                user_exclude_files_add "*.iced"
+                user_exclude_files_add "*.liticed"
+                user_exclude_files_add "*.iced.md"
+                user_exclude_files_add "*.cs"
+                user_exclude_files_add "*.coffee"
+                user_exclude_files_add "*.litcoffee"
+                user_exclude_files_add "*.coffee.md"
+                user_exclude_files_add "*.ts"
+                user_exclude_files_add "*.tsx"
+                user_exclude_files_add "*.ls"
+                user_exclude_files_add "*.sjs"
+                user_exclude_files_add "*.eg"
                 shift
                 ;;
             -.*)
-                grep_options+=(--include="*.${1#-.}")
+                user_include_files_add "*.${1#-.}"
                 shift
                 ;;
-            --.*)
-                grep_options+=(--include="*.${1#--.}")
+            --.*)               # --.html only adds .html, for example
+                user_include_files_add "*.${1#--.}"
                 shift
                 ;;
             +.*)
-                grep_options+=(--exclude="*.${1#+.}")
+                user_exclude_files_add "*.${1#+.}"
                 shift
                 ;;
             ++.*)
-                grep_options+=(--exclude="*.${1#++.}")
+                user_exclude_files_add "*.${1#++.}"
                 shift
                 ;;
             *)
@@ -127,13 +156,27 @@ main () {
         esac
     done
     declare -a command=(
-        "${grep}" -I -r "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "${grep_patterns[@]}" "$@"
+        "${grep}" -I -r "${user_include_files[@]}" "${user_exclude_files[@]}" "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "${grep_patterns[@]}" "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
     else
         exec "${command[@]}"
     fi
+}
+
+user_include_files_add () {
+    local i
+    for i ; do
+        user_include_files+=(--include="$i")
+    done
+}
+
+user_exclude_files_add () {
+    local i
+    for i ; do
+        user_exclude_files+=(--exclude="$i")
+    done
 }
 
 declare -a grep_options=()
@@ -482,6 +525,9 @@ declare -a exclude_files=(
     --exclude='composer.lock'
     --exclude='yarn.lock'
     --exclude='*.log'
+    --exclude='*.css.map'
+    --exclude='*.js.map'
+    --exclude='*.min.map'
 )
 
 main "$@"
