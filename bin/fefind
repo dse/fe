@@ -243,10 +243,10 @@ add-file-excludes () {
     add-file-exclude 'ido.last'
 
     # nytprof
-    'nytprof.out'
+    add-file-exclude 'nytprof.out'
 
     # emacs
-    'ido.last'
+    add-file-exclude 'ido.last'
 }
 
 add-binary-file-excludes () {
