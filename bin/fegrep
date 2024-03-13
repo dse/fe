@@ -232,11 +232,6 @@ get-options () {
             'grep-exclude-from')            require-argument "$@"; grep_options+=(--exclude-from="${OPTARG}");;
             'include'|'grep-include')       require-argument "$@"; grep_options+=(--include="${OPTARG}");;
 
-            'X')                            require-argument "$@"; fefind_options+=(
-                                                --exclude="${OPTARG}"
-                                                --exclude-dir="${OPTARG}"
-                                            );;
-
             'fefind-exclude')               require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'fefind-exclude-dir')           require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
@@ -245,7 +240,33 @@ get-options () {
             'exclude')                      require-argument "$@"; fefind_options+=(--exclude="${OPTARG}");;
             'exclude-dir')                  require-argument "$@"; fefind_options+=(--exclude-dir="${OPTARG}");;
 
-            '.')                            require-argument "$@"; grep_options+=(--include="*.${OPTARG}");;
+            'X')
+                # -X.js
+                # -X\*.js
+                require-argument "$@"
+                case "${OPTARG}" in
+                    .*)
+                        fefind_options+=(
+                            --exclude="*${OPTARG}"
+                            --exclude-dir="*${OPTARG}"
+                        )
+                        ;;
+                    *)
+                        fefind_options+=(
+                            --exclude="${OPTARG}"
+                            --exclude-dir="${OPTARG}"
+                        )
+                        ;;
+                esac
+                ;;
+
+            '.')
+                # -.js
+                require-argument "$@"
+                grep_options+=(
+                    --include="*.${OPTARG}"
+                )
+                ;;
 
             '.js')
                 grep_options+=(
