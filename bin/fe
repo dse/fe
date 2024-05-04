@@ -174,7 +174,7 @@ if [[ "${TERM}" = "emacs-grep" ]] ; then
 fi
 
 grep=grep
-if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin" ]] && type -P ggrep >/dev/null ; then
+if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin"* ]] && type -P ggrep >/dev/null ; then
     grep=ggrep
 fi
 
