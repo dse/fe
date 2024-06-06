@@ -237,7 +237,7 @@ exclude_dirs () {
 declare -a exclude_files=()
 exclude_files () {
     (( $# < 1 )) && return
-    exclude_files+=(--exclude-dir="$1")
+    exclude_files+=(--exclude="$1")
 }
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
 
