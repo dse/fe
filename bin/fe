@@ -5,18 +5,28 @@ set -o nounset
 shopt -s lastpipe
 
 declare -i print_command=0
+declare -i print_command_continue=0
 declare -a user_exclude_files=()
 declare -a user_include_files=()
+declare -i emacs=0
 
 main () {
-    if [[ -t 1 ]] ; then
-        # add colors by default if stdout is a tty; can be turned off layer
-        grep_options+=(--color=always)
-    fi
     while (( $# )) ; do
         case "$1" in
-            --print-command)
+            --print-command|--dry-run)
                 print_command=1
+                shift
+                ;;
+            --verbose)
+                print_command_continue=1
+                shift
+                ;;
+            --emacs)
+                echo $TERM
+                if (( !emacs )) ; then
+                    grep_options+=(--color=auto -nH --null)
+                    emacs=1
+                fi
                 shift
                 ;;
             --allow-excludes)
@@ -161,6 +171,9 @@ main () {
     if (( print_command )) ; then
         echo "${command[@]@Q}"
     else
+        if (( print_command_continue )) ; then
+            echo "${command[@]@Q}" >&2
+        fi
         exec "${command[@]}"
     fi
 }
@@ -169,8 +182,11 @@ declare -a grep_options=()
 declare -a grep_patterns=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
-    # invoked from M-x grep, either directly or indirectly
+    # invoked from M-x grep, either directly or indirectly; --emacs not specified
     grep_options+=(--color=auto -nH --null)
+elif [[ -t 1 ]] ; then
+    # add colors by default if stdout is a tty; can be turned off layer
+    grep_options+=(--color=always)
 fi
 
 grep=grep
