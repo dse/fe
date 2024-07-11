@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# -*- fill-column: 80 -*-
 set -o errexit
 set -o pipefail
 set -o nounset
@@ -160,6 +161,40 @@ main () {
                 user_exclude_files+=(--exclude="*.${1#++.}")
                 shift
                 ;;
+
+            # grep has --include and --exclude options which I'd rather not have
+            # to deal with in this program.  However, any --include or --exclude
+            # options would go into "$@" which sucks because in order to work,
+            # they need to be listed **before** user_exclude_files and
+            # exclude_files.  Unfortunately, due to that whole thing where any
+            # fe options have to come before grep options, using these options
+            # (or any other grep options) such as to pass them to fe instead of
+            # grep requires you to be aware of this.
+            --include)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --include"
+                    exit 1
+                fi
+                user_include_files+=(--include="${2}")
+                shift 2
+                ;;
+            --exclude)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --exclude"
+                    exit 1
+                fi
+                user_exclude_files+=(--exclude="${2}")
+                shift 2
+                ;;
+            --include=*)
+                user_include_files+=(--include="${1#*=}")
+                shift
+                ;;
+            --exclude=*)
+                user_exclude_files+=(--exclude="${1#*=}")
+                shift
+                ;;
+
             *)
                 break
                 ;;
