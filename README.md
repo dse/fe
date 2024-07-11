@@ -61,3 +61,27 @@ specify it yourself.
 If you use any of these, then you must use `-e` to specify any
 additional patterns.  You need not, and must not, specify `-e` before
 any of *these* pattern options, however.
+
+## Other Greppers
+
+-   [ack](https://beyondgrep.com/)
+-   [ag - the Silver Searcher](https://geoff.greer.fm/ag/)
+-   [ast-grep](https://github.com/ast-grep/ast-grep)
+-   [cgrep](https://awgn.github.io/cgrep/)
+-   [git grep](https://git-scm.com/docs/git-grep)
+-   [glark](https://github.com/jpace/glark)
+-   [grab](https://github.com/stealth/grab)
+-   [greple](https://github.com/kaz-utashiro/greple)
+-   [grin](https://pypi.python.org/pypi/grin)
+-   [paragrep](https://software.clapper.org/paragrep/)
+-   [pss](https://github.com/eliben/pss/) - an ack clone
+-   [pt - the Platinum Searcher](https://github.com/monochromegane/the_platinum_searcher)
+-   [qgrep](https://github.com/zeux/qgrep)
+-   [rak](https://github.com/danlucraft/rak) - an ack clone
+-   [rg - ripgrep](https://github.com/BurntSushi/ripgrep)
+-   [rga](https://github.com/phiresky/ripgrep-all) - ripgrep, but also searches PDFs, ebooks, Office documents, `.zip` and `.tar.gz` files, and more.
+-   [sift](https://sift-tool.org/)
+-   [spot](https://github.com/rauchg/spot)
+-   [ucg - UniversalCodeGrep](https://github.com/gvansickle/ucg)
+-   [ugrep](https://github.com/Genivia/ugrep)
+
