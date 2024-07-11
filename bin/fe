@@ -7,6 +7,7 @@ shopt -s lastpipe
 
 declare -i print_command=0
 declare -i print_command_continue=0
+declare -a user_exclude_dirs=()
 declare -a user_exclude_files=()
 declare -a user_include_files=()
 declare -i emacs=0
@@ -186,12 +187,24 @@ main () {
                 user_exclude_files+=(--exclude="${2}")
                 shift 2
                 ;;
+            --exclude-dir)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --exclude-dir"
+                    exit 1
+                fi
+                user_exclude_dirs+=(--exclude-dir="${2}")
+                shift 2
+                ;;
             --include=*)
                 user_include_files+=(--include="${1#*=}")
                 shift
                 ;;
             --exclude=*)
                 user_exclude_files+=(--exclude="${1#*=}")
+                shift
+                ;;
+            --exclude-dir=*)
+                user_exclude_dirs+=(--exclude-dir="${1#*=}")
                 shift
                 ;;
 
@@ -202,6 +215,7 @@ main () {
     done
     declare -a command=(
         "${grep}" -I -r
+        "${user_exclude_dirs[@]}"
         "${user_include_files[@]}"
         "${user_exclude_files[@]}"
         "${grep_options[@]}"
