@@ -256,8 +256,10 @@ declare -a grep_options=()
 declare -a grep_patterns=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
-    # invoked from M-x grep, either directly or indirectly; --emacs not specified
-    grep_options+=(--color=auto -nH --null)
+    # invoked from M-x grep, either directly or indirectly; --emacs not
+    # specified; don't use --null; see commit from around
+    # Thu 07/11/2024 19:21 EDT-0400
+    grep_options+=(--color=auto -nH)
 elif [[ -t 1 ]] ; then
     # add colors by default if stdout is a tty; can be turned off layer
     grep_options+=(--color=always)
