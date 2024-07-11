@@ -171,6 +171,11 @@ main () {
             # fe options have to come before grep options, using these options
             # (or any other grep options) such as to pass them to fe instead of
             # grep requires you to be aware of this.
+            #
+            # Also, since all the --include options are grouped together, the
+            # same for --exclude, and the same for --exclude-dir, the order in
+            # which they're specified before any grep options is altered which I
+            # would rather not have.
             --include)
                 if (( $# < 2 )) ; then
                     echo "fe: option missing required argument - --include"
