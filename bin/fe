@@ -216,11 +216,11 @@ main () {
     declare -a command=(
         "${grep}" -I -r
         "${user_exclude_dirs[@]}"
+        "${exclude_dirs[@]}"
         "${user_include_files[@]}"
+        "${exclude_files[@]}"
         "${user_exclude_files[@]}"
         "${grep_options[@]}"
-        "${exclude_dirs[@]}"
-        "${exclude_files[@]}"
         "${grep_patterns[@]}" "$@"
     )
     if (( print_command )) ; then
