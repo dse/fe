@@ -1,22 +1,35 @@
 #!/usr/bin/env bash
+# -*- fill-column: 80 -*-
 set -o errexit
 set -o pipefail
 set -o nounset
 shopt -s lastpipe
 
 declare -i print_command=0
+declare -i print_command_continue=0
+declare -a user_exclude_dirs=()
+declare -a user_exclude_from=()
 declare -a user_exclude_files=()
 declare -a user_include_files=()
+declare -i emacs=0
 
 main () {
-    if [[ -t 1 ]] ; then
-        # add colors by default if stdout is a tty; can be turned off layer
-        grep_options+=(--color=always)
-    fi
     while (( $# )) ; do
         case "$1" in
-            --print-command)
+            --print-command|--dry-run)
                 print_command=1
+                shift
+                ;;
+            --verbose)
+                print_command_continue=1
+                shift
+                ;;
+            --emacs)
+                echo $TERM
+                if (( !emacs )) ; then
+                    grep_options+=(--color=auto -nH --null)
+                    emacs=1
+                fi
                 shift
                 ;;
             --allow-excludes)
@@ -150,17 +163,91 @@ main () {
                 user_exclude_files+=(--exclude="*.${1#++.}")
                 shift
                 ;;
+
+            # grep has --include and --exclude options which I'd rather not have
+            # to deal with in this program.  However, any --include or --exclude
+            # options would go into "$@" which sucks because in order to work,
+            # they need to be listed **before** user_exclude_files and
+            # exclude_files.  Unfortunately, due to that whole thing where any
+            # fe options have to come before grep options, using these options
+            # (or any other grep options) such as to pass them to fe instead of
+            # grep requires you to be aware of this.
+            #
+            # Also, since all the --include options are grouped together, the
+            # same for --exclude, and the same for --exclude-dir, the order in
+            # which they're specified before any grep options is altered which I
+            # would rather not have.
+            --include)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --include"
+                    exit 1
+                fi
+                user_include_files+=(--include="${2}")
+                shift 2
+                ;;
+            --exclude)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --exclude"
+                    exit 1
+                fi
+                user_exclude_files+=(--exclude="${2}")
+                shift 2
+                ;;
+            --exclude-dir)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --exclude-dir"
+                    exit 1
+                fi
+                user_exclude_dirs+=(--exclude-dir="${2}")
+                shift 2
+                ;;
+            --exclude-from)
+                if (( $# < 2 )) ; then
+                    echo "fe: option missing required argument - --exclude-from"
+                    exit 1
+                fi
+                user_exclude_from+=(--exclude-from="${2}")
+                shift 2
+                ;;
+            --include=*)
+                user_include_files+=(--include="${1#*=}")
+                shift
+                ;;
+            --exclude=*)
+                user_exclude_files+=(--exclude="${1#*=}")
+                shift
+                ;;
+            --exclude-dir=*)
+                user_exclude_dirs+=(--exclude-dir="${1#*=}")
+                shift
+                ;;
+            --exclude-from=*)
+                user_exclude_from+=(--exclude-from="${1#*=}")
+                shift
+                ;;
+
             *)
                 break
                 ;;
         esac
     done
     declare -a command=(
-        "${grep}" -I -r "${user_include_files[@]}" "${user_exclude_files[@]}" "${grep_options[@]}" "${exclude_dirs[@]}" "${exclude_files[@]}" "${grep_patterns[@]}" "$@"
+        "${grep}" -I -r
+        "${user_exclude_dirs[@]}"
+        "${user_exclude_from[@]}"
+        "${exclude_dirs[@]}"
+        "${user_include_files[@]}"
+        "${exclude_files[@]}"
+        "${user_exclude_files[@]}"
+        "${grep_options[@]}"
+        "${grep_patterns[@]}" "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
     else
+        if (( print_command_continue )) ; then
+            echo "${command[@]@Q}" >&2
+        fi
         exec "${command[@]}"
     fi
 }
@@ -169,8 +256,13 @@ declare -a grep_options=()
 declare -a grep_patterns=()
 
 if [[ "${TERM}" = "emacs-grep" ]] ; then
-    # invoked from M-x grep, either directly or indirectly
-    grep_options+=(--color=auto -nH --null)
+    # invoked from M-x grep, either directly or indirectly; --emacs not
+    # specified; don't use --null; see commit from around
+    # Thu 07/11/2024 19:21 EDT-0400
+    grep_options+=(--color=auto -nH)
+elif [[ -t 1 ]] ; then
+    # add colors by default if stdout is a tty; can be turned off layer
+    grep_options+=(--color=always)
 fi
 
 grep=grep
@@ -237,7 +329,7 @@ exclude_dirs () {
 declare -a exclude_files=()
 exclude_files () {
     (( $# < 1 )) && return
-    exclude_files+=(--exclude-dir="$1")
+    exclude_files+=(--exclude="$1")
 }
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
 
