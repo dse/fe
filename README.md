@@ -68,7 +68,7 @@ any of *these* pattern options, however.
 -   [ag - the Silver Searcher](https://geoff.greer.fm/ag/)
 -   [ast-grep](https://github.com/ast-grep/ast-grep)
 -   [cgrep](https://awgn.github.io/cgrep/)
--   [git grep](https://git-scm.com/docs/git-grep)
+-   [git](https://git-scm.com/) includes [git grep](https://git-scm.com/docs/git-grep)
 -   [glark](https://github.com/jpace/glark)
 -   [grab](https://github.com/stealth/grab)
 -   [greple](https://github.com/kaz-utashiro/greple)
@@ -84,4 +84,3 @@ any of *these* pattern options, however.
 -   [spot](https://github.com/rauchg/spot)
 -   [ucg - UniversalCodeGrep](https://github.com/gvansickle/ucg)
 -   [ugrep](https://github.com/Genivia/ugrep)
-
