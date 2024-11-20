@@ -240,7 +240,8 @@ main () {
         "${exclude_files[@]}"
         "${user_exclude_files[@]}"
         "${grep_options[@]}"
-        "${grep_patterns[@]}" "$@"
+        "${grep_patterns[@]}"
+        "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
