@@ -193,9 +193,14 @@ exclude_dirs () {
 . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
 
 declare -a exclude_files=()
-exclude_files () {
+exclude_files_find_grep () {
     (( $# < 1 )) && return
     exclude_files+=(   \! -name "$1"   )
+}
+exclude_files_grep () {
+    :
+    # (( $# < 1 )) && return
+    # exclude_files+=(   \! -name "$1"   )
 }
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
 
