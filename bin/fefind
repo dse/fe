@@ -157,13 +157,14 @@ main () {
     fi
 
     declare -a command=(
-        find "${find_options[@]}" \
-             "${find_targets[@]}" \
-             "${exclude_dirs[@]}" \
-             "${user_include_files[@]}" \
-             "${user_exclude_files[@]}" \
-             "${exclude_files[@]}" \
-             "$@"
+        find
+        "${find_options[@]}"
+        "${find_targets[@]}"
+        "${exclude_dirs[@]}"
+        "${user_include_files[@]}"
+        "${user_exclude_files[@]}"
+        "${exclude_files[@]}"
+        "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
