@@ -19,6 +19,13 @@ main () {
                 list_excludes
                 exit 0
                 ;;
+            --exclude-binary|--exclude-binaries|--exclude-binary-files)
+                exclude_files_grep () {
+                    (( $# < 1 )) && return
+                    exclude_files+=(\! -name "$1")
+                }
+                shift
+                ;;
             -.html)
                 user_include_files+=(-o -name "*.xhtml")
                 user_include_files+=(-o -name "*.html")
@@ -107,6 +114,8 @@ main () {
         esac
     done
 
+    build_exclude_lists
+
     # parse command line arguments in the same way find does.
 
     declare -a find_options=()
@@ -188,28 +197,27 @@ list_excludes () {
 declare -a exclude_dirs=()
 declare -a exclude_files=()
 
+# These functions may be redefined later.
+exclude_dirs () {
+    (( $# < 1 )) && return
+    exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
+}
+exclude_files_find_grep () {
+    (( $# < 1 )) && return
+    exclude_files+=(   \! -name "$1"   )
+}
+exclude_files_grep () {
+    :
+    # (( $# < 1 )) && return
+    # exclude_files+=(   \! -name "$1"   )
+}
+
+# This is executed after command line options are processed.
 build_exclude_lists () {
     exclude_dirs=()
     exclude_files=()
-
-    exclude_dirs () {
-        (( $# < 1 )) && return
-        exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
-    }
     . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
-
-    exclude_files_find_grep () {
-        (( $# < 1 )) && return
-        exclude_files+=(   \! -name "$1"   )
-    }
-    exclude_files_grep () {
-        :
-        # (( $# < 1 )) && return
-        # exclude_files+=(   \! -name "$1"   )
-    }
     . "$(dirname "$0")/../share/fe/exclude-files.sh"
 }
-
-build_exclude_lists
 
 main "$@"
