@@ -186,22 +186,30 @@ list_excludes () {
 }
 
 declare -a exclude_dirs=()
-exclude_dirs () {
-    (( $# < 1 )) && return
-    exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
-}
-. "$(dirname "$0")/../share/fe/exclude-dirs.sh"
-
 declare -a exclude_files=()
-exclude_files_find_grep () {
-    (( $# < 1 )) && return
-    exclude_files+=(   \! -name "$1"   )
+
+build_exclude_lists () {
+    exclude_dirs=()
+    exclude_files=()
+
+    exclude_dirs () {
+        (( $# < 1 )) && return
+        exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
+    }
+    . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
+
+    exclude_files_find_grep () {
+        (( $# < 1 )) && return
+        exclude_files+=(   \! -name "$1"   )
+    }
+    exclude_files_grep () {
+        :
+        # (( $# < 1 )) && return
+        # exclude_files+=(   \! -name "$1"   )
+    }
+    . "$(dirname "$0")/../share/fe/exclude-files.sh"
 }
-exclude_files_grep () {
-    :
-    # (( $# < 1 )) && return
-    # exclude_files+=(   \! -name "$1"   )
-}
-. "$(dirname "$0")/../share/fe/exclude-files.sh"
+
+build_exclude_lists
 
 main "$@"
