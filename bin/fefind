@@ -92,6 +92,18 @@ main () {
                 user_exclude_files+=(\! -name "*.eg")
                 shift
                 ;;
+            --exclude=*)
+                user_exclude_files+=(\! -name "${1#--exclude=}")
+                shift
+                ;;
+            --exclude)
+                if (( $# < 2 )) ; then
+                    echo "option missing required argument -- ${1}"
+                    exit 1
+                fi
+                user_exclude_files+=(\! -name "${2}")
+                shift 2
+                ;;
             -.*)
                 user_include_files+=(-o -name "*.${1#-.}")
                 shift
@@ -161,7 +173,7 @@ main () {
     # File exclusions work a bit differently, so we don't need to do
     # this for them.
     if (( ${#user_include_files[@]} )) ; then
-        user_include_files[0]='('
+        user_include_files[0]='(' # replaces the first "-o"
         user_include_files+=(')')
     fi
 
