@@ -14,6 +14,10 @@ declare -a user_include_files=()
 declare -i emacs=0
 
 main () {
+    if [[ -e ~/.config/fe/fe.bash ]] ; then
+        . ~/.config/fe/fe.bash
+        echo "# NOTE: sourced ~/.config/fe/fe.bash" >&2
+    fi
     while (( $# )) ; do
         case "$1" in
             --print-command|--dry-run)
