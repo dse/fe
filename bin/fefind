@@ -7,6 +7,7 @@ shopt -s lastpipe
 declare -i print_command=0
 declare -a user_exclude_files=()
 declare -a user_include_files=()
+declare -a user_exclude_dirs=()
 
 main () {
     while (( $# )) ; do
@@ -104,6 +105,18 @@ main () {
                 user_exclude_files+=(\! -name "${2}")
                 shift 2
                 ;;
+            --exclude-dir=*)
+                user_exclude_dirs+=( \! \( -type d -name "${1#*=}" -prune \) )
+                shift
+                ;;
+            --exclude-dir)
+                if (( $# < 2 )) ; then
+                    echo "option missing required argument -- ${1}"
+                    exit 1
+                fi
+                user_exclude_dirs+=( \! \( -type d -name "${2}" -prune \) )
+                shift 2
+                ;;
             -.*)
                 user_include_files+=(-o -name "*.${1#-.}")
                 shift
@@ -182,6 +195,7 @@ main () {
         "${find_options[@]}"
         "${find_targets[@]}"
         "${exclude_dirs[@]}"
+        "${user_exclude_dirs[@]}"
         "${user_include_files[@]}"
         "${user_exclude_files[@]}"
         "${exclude_files[@]}"
