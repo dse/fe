@@ -16,7 +16,6 @@ exclude_files_find_grep '*.old.*'
 # executable
 exclude_files_grep '*.exe'
 exclude_files_grep '*.com'
-exclude_files_grep '*.sys'           # a la config.sys
 
 # shared libraries, object files
 exclude_files_grep '*.o'
