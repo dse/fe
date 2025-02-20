@@ -23,6 +23,10 @@ main () {
                 print_command=1
                 shift
                 ;;
+            --pretty-print-command)
+                print_command=2
+                shift
+                ;;
             --verbose)
                 print_command_continue=1
                 shift
@@ -246,7 +250,11 @@ main () {
         "${grep_patterns[@]}"
         "$@"
     )
-    if (( print_command )) ; then
+    if (( print_command >= 2 )) ; then
+        for i in "${command[@]}" ; do
+            echo "${i@Q}"
+        done
+    elif (( print_command )) ; then
         echo "${command[@]@Q}"
     else
         if (( print_command_continue )) ; then
