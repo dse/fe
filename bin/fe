@@ -325,10 +325,8 @@ delete_from_excludes () {
 }
 
 allow () {
-    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
     delete_from_excludes exclude_dirs "$@"
     delete_from_excludes exclude_files "$@"
-    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
 }
 
 declare -a exclude_dirs=()
