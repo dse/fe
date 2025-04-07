@@ -7,6 +7,7 @@ shopt -s lastpipe
 declare -i print_command=0
 declare -a user_exclude_files=()
 declare -a user_include_files=()
+declare -a user_exclude_dirs=()
 
 main () {
     while (( $# )) ; do
@@ -18,6 +19,13 @@ main () {
             --list-excludes)
                 list_excludes
                 exit 0
+                ;;
+            --exclude-binary|--exclude-binaries|--exclude-binary-files)
+                exclude_files_grep () {
+                    (( $# < 1 )) && return
+                    exclude_files+=(\! -name "$1")
+                }
+                shift
                 ;;
             -.html)
                 user_include_files+=(-o -name "*.xhtml")
@@ -85,6 +93,30 @@ main () {
                 user_exclude_files+=(\! -name "*.eg")
                 shift
                 ;;
+            --exclude=*)
+                user_exclude_files+=(\! -name "${1#--exclude=}")
+                shift
+                ;;
+            --exclude)
+                if (( $# < 2 )) ; then
+                    echo "option missing required argument -- ${1}"
+                    exit 1
+                fi
+                user_exclude_files+=(\! -name "${2}")
+                shift 2
+                ;;
+            --exclude-dir=*)
+                user_exclude_dirs+=( \! \( -type d -name "${1#*=}" -prune \) )
+                shift
+                ;;
+            --exclude-dir)
+                if (( $# < 2 )) ; then
+                    echo "option missing required argument -- ${1}"
+                    exit 1
+                fi
+                user_exclude_dirs+=( \! \( -type d -name "${2}" -prune \) )
+                shift 2
+                ;;
             -.*)
                 user_include_files+=(-o -name "*.${1#-.}")
                 shift
@@ -106,6 +138,8 @@ main () {
                 ;;
         esac
     done
+
+    build_exclude_lists
 
     # parse command line arguments in the same way find does.
 
@@ -152,12 +186,20 @@ main () {
     # File exclusions work a bit differently, so we don't need to do
     # this for them.
     if (( ${#user_include_files[@]} )) ; then
-        user_include_files[0]='('
+        user_include_files[0]='(' # replaces the first "-o"
         user_include_files+=(')')
     fi
 
     declare -a command=(
-        find "${find_options[@]}" "${find_targets[@]}" "${exclude_dirs[@]}" "${user_include_files[@]}" "${user_exclude_files[@]}" "${exclude_files[@]}" "$@"
+        find
+        "${find_options[@]}"
+        "${find_targets[@]}"
+        "${exclude_dirs[@]}"
+        "${user_exclude_dirs[@]}"
+        "${user_include_files[@]}"
+        "${user_exclude_files[@]}"
+        "${exclude_files[@]}"
+        "$@"
     )
     if (( print_command )) ; then
         echo "${command[@]@Q}"
@@ -179,17 +221,29 @@ list_excludes () {
 }
 
 declare -a exclude_dirs=()
+declare -a exclude_files=()
+
+# These functions may be redefined later.
 exclude_dirs () {
     (( $# < 1 )) && return
     exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
 }
-. "$(dirname "$0")/../share/fe/exclude-dirs.sh"
-
-declare -a exclude_files=()
-exclude_files () {
+exclude_files_find_grep () {
     (( $# < 1 )) && return
     exclude_files+=(   \! -name "$1"   )
 }
-. "$(dirname "$0")/../share/fe/exclude-files.sh"
+exclude_files_grep () {
+    :
+    # (( $# < 1 )) && return
+    # exclude_files+=(   \! -name "$1"   )
+}
+
+# This is executed after command line options are processed.
+build_exclude_lists () {
+    exclude_dirs=()
+    exclude_files=()
+    . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
+    . "$(dirname "$0")/../share/fe/exclude-files.sh"
+}
 
 main "$@"

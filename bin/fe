@@ -14,10 +14,17 @@ declare -a user_include_files=()
 declare -i emacs=0
 
 main () {
+    if [[ -e ~/.config/fe/fe.bash ]] ; then
+        . ~/.config/fe/fe.bash
+    fi
     while (( $# )) ; do
         case "$1" in
             --print-command|--dry-run)
                 print_command=1
+                shift
+                ;;
+            --pretty-print-command)
+                print_command=2
                 shift
                 ;;
             --verbose)
@@ -234,15 +241,20 @@ main () {
     declare -a command=(
         "${grep}" -I -r
         "${user_exclude_dirs[@]}"
-        "${user_exclude_from[@]}"
         "${exclude_dirs[@]}"
         "${user_include_files[@]}"
+        "${user_exclude_from[@]}"
         "${exclude_files[@]}"
         "${user_exclude_files[@]}"
         "${grep_options[@]}"
-        "${grep_patterns[@]}" "$@"
+        "${grep_patterns[@]}"
+        "$@"
     )
-    if (( print_command )) ; then
+    if (( print_command >= 2 )) ; then
+        for i in "${command[@]}" ; do
+            echo "${i@Q}"
+        done
+    elif (( print_command )) ; then
         echo "${command[@]@Q}"
     else
         if (( print_command_continue )) ; then
@@ -313,24 +325,56 @@ delete_from_excludes () {
 }
 
 allow () {
-    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
     delete_from_excludes exclude_dirs "$@"
     delete_from_excludes exclude_files "$@"
-    echo "${#exclude_dirs[@]} ${#exclude_files[@]}"
 }
 
 declare -a exclude_dirs=()
 exclude_dirs () {
     (( $# < 1 )) && return
-    exclude_dirs+=(--exclude-dir="$1")
+    local i
+    for i ; do
+        exclude_dirs+=(--exclude-dir="$i")
+    done
 }
 . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
 
 declare -a exclude_files=()
-exclude_files () {
+exclude_files_find_grep () {
+    (( $# < 1 )) && return
+    local i
+    for i ; do
+        exclude_files+=(--exclude="$i")
+    done
+}
+exclude_files_grep () {
     (( $# < 1 )) && return
     exclude_files+=(--exclude="$1")
 }
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
+
+user_include_files () {
+    (( $# < 1 )) && return
+    local i
+    for i ; do
+        user_exclude_files+=(--include="$i")
+    done
+}
+
+user_exclude_files () {
+    (( $# < 1 )) && return
+    local i
+    for i ; do
+        user_exclude_files+=(--exclude="$i")
+    done
+}
+
+user_exclude_dirs () {
+    (( $# < 1 )) && return
+    local i
+    for i ; do
+        user_exclude_dirs+=(--exclude-dir="$i")
+    done
+}
 
 main "$@"
