@@ -12,6 +12,12 @@ declare -a user_exclude_from=()
 declare -a user_exclude_files=()
 declare -a user_include_files=()
 declare -i emacs=0
+declare -i use_find=0
+
+if (( $# )) && [[ "$1" == "--find" ]] ; then
+    use_find=1
+    shift
+fi
 
 main () {
     if [[ -e ~/.config/fe/fe.bash ]] ; then
@@ -20,6 +26,10 @@ main () {
     . "$(dirname "$0")/../share/fe/exclude-sets.sh"
     while (( $# )) ; do
         case "$1" in
+            --find)
+                echo "fe: --find must be specified FIRST"
+                exit 1
+                ;;
             --print-command|--dry-run)
                 print_command=1
                 shift
