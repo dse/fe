@@ -17,6 +17,7 @@ main () {
     if [[ -e ~/.config/fe/fe.bash ]] ; then
         . ~/.config/fe/fe.bash
     fi
+    . "$(dirname "$0")/../share/fe/exclude-sets.sh"
     while (( $# )) ; do
         case "$1" in
             --print-command|--dry-run)
@@ -89,69 +90,39 @@ main () {
                 shift
                 ;;
             -.html)
-                user_include_files+=(--include="*.xhtml")
-                user_include_files+=(--include="*.html")
-                user_include_files+=(--include="*.htm")
-                user_include_files+=(--include="*.php")
+                for i in "${file_set__html[@]}" ; do
+                    user_include_files+=(--include="${i}")
+                done
                 shift
                 ;;
             -.css)
-                user_include_files+=(--include="*.css")
-                user_include_files+=(--include="*.scss")
+                for i in "${file_set__css[@]}" ; do
+                    user_include_files+=(--include="${i}")
+                done
                 shift
                 ;;
             -.js)
-                user_include_files+=(--include="*.js")
-                user_include_files+=(--include="*.mjs")
-                user_include_files+=(--include="*.cjs")
-                user_include_files+=(--include="*.jsx")
-                user_include_files+=(--include="*.es6")
-                user_include_files+=(--include="*.es")
-                user_include_files+=(--include="*.iced")
-                user_include_files+=(--include="*.liticed")
-                user_include_files+=(--include="*.iced.md")
-                user_include_files+=(--include="*.cs")
-                user_include_files+=(--include="*.coffee")
-                user_include_files+=(--include="*.litcoffee")
-                user_include_files+=(--include="*.coffee.md")
-                user_include_files+=(--include="*.ts")
-                user_include_files+=(--include="*.tsx")
-                user_include_files+=(--include="*.ls")
-                user_include_files+=(--include="*.sjs")
-                user_include_files+=(--include="*.eg")
+                for i in "${file_set__js[@]}" ; do
+                    user_include_files+=(--include="${i}")
+                done
                 shift
                 ;;
             +.html)
-                user_exclude_files+=(--exclude="*.xhtml")
-                user_exclude_files+=(--exclude="*.html")
-                user_exclude_files+=(--exclude="*.htm")
-                user_exclude_files+=(--exclude="*.php")
+                for i in "${file_set__html[@]}" ; do
+                    user_exclude_files+=(--exclude="${i}")
+                done
                 shift
                 ;;
             +.css)
-                user_exclude_files+=(--exclude="*.css")
-                user_exclude_files+=(--exclude="*.scss")
+                for i in "${file_set__css[@]}" ; do
+                    user_exclude_files+=(--exclude="${i}")
+                done
                 shift
                 ;;
             +.js)
-                user_exclude_files+=(--exclude="*.js")
-                user_exclude_files+=(--exclude="*.mjs")
-                user_exclude_files+=(--exclude="*.cjs")
-                user_exclude_files+=(--exclude="*.jsx")
-                user_exclude_files+=(--exclude="*.es6")
-                user_exclude_files+=(--exclude="*.es")
-                user_exclude_files+=(--exclude="*.iced")
-                user_exclude_files+=(--exclude="*.liticed")
-                user_exclude_files+=(--exclude="*.iced.md")
-                user_exclude_files+=(--exclude="*.cs")
-                user_exclude_files+=(--exclude="*.coffee")
-                user_exclude_files+=(--exclude="*.litcoffee")
-                user_exclude_files+=(--exclude="*.coffee.md")
-                user_exclude_files+=(--exclude="*.ts")
-                user_exclude_files+=(--exclude="*.tsx")
-                user_exclude_files+=(--exclude="*.ls")
-                user_exclude_files+=(--exclude="*.sjs")
-                user_exclude_files+=(--exclude="*.eg")
+                for i in "${file_set__js[@]}" ; do
+                    user_exclude_files+=(--exclude="${i}")
+                done
                 shift
                 ;;
             -.*)

@@ -10,6 +10,7 @@ declare -a user_include_files=()
 declare -a user_exclude_dirs=()
 
 main () {
+    . "$(dirname "$0")/../share/fe/exclude-sets.sh"
     while (( $# )) ; do
         case "$1" in
             --print-command)
@@ -28,69 +29,39 @@ main () {
                 shift
                 ;;
             -.html)
-                user_include_files+=(-o -name "*.xhtml")
-                user_include_files+=(-o -name "*.html")
-                user_include_files+=(-o -name "*.htm")
-                user_include_files+=(-o -name "*.php")
+                for i in "${file_set__html[@]}" ; do
+                    user_include_files+=(-o -name "${i}")
+                done
                 shift
                 ;;
             -.css)
-                user_include_files+=(-o -name "*.css")
-                user_include_files+=(-o -name "*.scss")
+                for i in "${file_set__css[@]}" ; do
+                    user_include_files+=(-o -name "${i}")
+                done
                 shift
                 ;;
             -.js)
-                user_include_files+=(-o -name "*.js")
-                user_include_files+=(-o -name "*.mjs")
-                user_include_files+=(-o -name "*.cjs")
-                user_include_files+=(-o -name "*.jsx")
-                user_include_files+=(-o -name "*.es6")
-                user_include_files+=(-o -name "*.es")
-                user_include_files+=(-o -name "*.iced")
-                user_include_files+=(-o -name "*.liticed")
-                user_include_files+=(-o -name "*.iced.md")
-                user_include_files+=(-o -name "*.cs")
-                user_include_files+=(-o -name "*.coffee")
-                user_include_files+=(-o -name "*.litcoffee")
-                user_include_files+=(-o -name "*.coffee.md")
-                user_include_files+=(-o -name "*.ts")
-                user_include_files+=(-o -name "*.tsx")
-                user_include_files+=(-o -name "*.ls")
-                user_include_files+=(-o -name "*.sjs")
-                user_include_files+=(-o -name "*.eg")
+                for i in "${file_set__js[@]}" ; do
+                    user_include_files+=(-o -name "${i}")
+                done
                 shift
                 ;;
             +.html)
-                user_exclude_files+=(\! -name "*.xhtml")
-                user_exclude_files+=(\! -name "*.html")
-                user_exclude_files+=(\! -name "*.htm")
-                user_exclude_files+=(\! -name "*.php")
+                for i in "${file_set__html[@]}" ; do
+                    user_exclude_files+=(\! -name "${i}")
+                done
                 shift
                 ;;
             +.css)
-                user_exclude_files+=(\! -name "*.css")
-                user_exclude_files+=(\! -name "*.scss")
+                for i in "${file_set__css[@]}" ; do
+                    user_exclude_files+=(\! -name "${i}")
+                done
                 shift
                 ;;
             +.js)
-                user_exclude_files+=(\! -name "*.js")
-                user_exclude_files+=(\! -name "*.mjs")
-                user_exclude_files+=(\! -name "*.cjs")
-                user_exclude_files+=(\! -name "*.jsx")
-                user_exclude_files+=(\! -name "*.es6")
-                user_exclude_files+=(\! -name "*.es")
-                user_exclude_files+=(\! -name "*.iced")
-                user_exclude_files+=(\! -name "*.liticed")
-                user_exclude_files+=(\! -name "*.iced.md")
-                user_exclude_files+=(\! -name "*.cs")
-                user_exclude_files+=(\! -name "*.coffee")
-                user_exclude_files+=(\! -name "*.litcoffee")
-                user_exclude_files+=(\! -name "*.coffee.md")
-                user_exclude_files+=(\! -name "*.ts")
-                user_exclude_files+=(\! -name "*.tsx")
-                user_exclude_files+=(\! -name "*.ls")
-                user_exclude_files+=(\! -name "*.sjs")
-                user_exclude_files+=(\! -name "*.eg")
+                for i in "${file_set__js[@]}" ; do
+                    user_exclude_files+=(\! -name "${i}")
+                done
                 shift
                 ;;
             --exclude=*)
