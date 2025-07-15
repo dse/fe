@@ -196,17 +196,23 @@ declare -a exclude_files=()
 
 # These functions may be redefined later.
 exclude_dirs () {
-    (( $# < 1 )) && return
-    exclude_dirs+=(   \! \( -type d -name "$1" -prune \)   )
+    local i
+    for i ; do
+        exclude_dirs+=(   \! \( -type d -name "$i" -prune \)   )
+    done
 }
 exclude_files_find_grep () {
-    (( $# < 1 )) && return
-    exclude_files+=(   \! -name "$1"   )
+    local i
+    for i ; do
+        exclude_files+=(   \! -name "$i"   )
+    done
 }
 exclude_files_grep () {
     :
-    # (( $# < 1 )) && return
-    # exclude_files+=(   \! -name "$1"   )
+    # local i
+    # for i ; do
+    #     exclude_files+=(   \! -name "$1"   )
+    # done
 }
 
 # This is executed after command line options are processed.
