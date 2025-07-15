@@ -8,23 +8,25 @@ shopt -s lastpipe
 declare -i print_command=0
 declare -i print_command_continue=0
 
+# pre-populated; these only include filenames
+declare -a exclude_dirs=()
+declare -a exclude_files=()
+
+# specified by user; these only include filenames
 declare -a user_exclude_dirs=()
 declare -a user_exclude_from=()
 declare -a user_exclude_files=()
 declare -a user_include_files=()
 
+# these include --exclude-dir=..., --exclude=..., --include=..., etc.
 declare -a _user_exclude_dirs=()
 declare -a _user_exclude_from=()
 declare -a _user_exclude_files=()
 declare -a _user_include_files=()
+declare -a _exclude_dirs=()
+declare -a _exclude_files=()
 
 declare -i emacs=0
-declare -i use_find=0
-
-if (( $# )) && [[ "$1" == "--find" ]] ; then
-    use_find=1
-    shift
-fi
 
 main () {
     if [[ -e ~/.config/fe/fe.bash ]] ; then
@@ -33,10 +35,6 @@ main () {
     . "$(dirname "$0")/../share/fe/exclude-sets.sh"
     while (( $# )) ; do
         case "$1" in
-            --find)
-                echo "fe: --find must be specified FIRST"
-                exit 1
-                ;;
             --print-command|--dry-run)
                 print_command=1
                 shift
@@ -230,138 +228,51 @@ main () {
     declare -a find_options=()
     declare -a find_targets=()
 
-    if (( use_find )) ; then
-        while (( $# )) ; do
-            case "$1" in
-                -P|-L|-H)
-                    find_options+=("$1")
-                    shift
-                    ;;
-                -D|-O)
-                    if (( $# < 2 )) ; then
-                        echo "option missing required argument - $1"
-                        exit 1
-                    fi
-                    find_options+=("$1" "$2")
-                    shift 2
-                    ;;
-                -D*|-O*)
-                    find_options+=("$1")
-                    shift
-                    ;;
-                *)
-                    # ends options; starting point arguments follow
-                    break
-                    ;;
-            esac
-        done
-        while (( $# )) ; do
-            case "$1" in
-                "!"|"("|-*)
-                    # ends starting points; find expression follows
-                    break
-                    ;;
-                *)
-                    find_targets+=("$1")
-                    shift
-                    ;;
-            esac
-        done
-    fi
-
-    if (( use_find )) ; then
-        for i in "${exclude_dirs[@]}" ; do
-            _exclude_dirs+=(
-                \! \( -type d -name "$i" -prune \)
-            )
-        done
-        for i in "${user_exclude_dirs[@]}" ; do
-            _user_exclude_dirs+=(
-                \! \( -type d -name "$i" -prune \)
-            )
-        done
-        for i in "${exclude_files[@]}" ; do
-            _exclude_files+=(
-                \! -name "$i"
-            )
-        done
-        for i in "${user_exclude_files[@]}" ; do
-            _user_exclude_files+=(
-                \! -name "$i"
-            )
-        done
-        for i in "${user_include_files[@]}" ; do
-            _user_include_files+=(
-                -o -name "$i"
-            )
-        done
-        for i in "${user_exclude_from[@]}" ; do
-            echo "fe: --exclude-from and --find are mutually exclusive" >&2
-            exit 1
-        done
-    else
-        for i in "${exclude_dirs[@]}" ; do
-            _exclude_dirs+=(
-                --exclude-dir="$i"
-            )
-        done
-        for i in "${user_exclude_dirs[@]}" ; do
-            _user_exclude_dirs+=(
-                --exclude-dir="$i"
-            )
-        done
-        for i in "${exclude_files[@]}" ; do
-            _exclude_files+=(
-                --exclude="$i"
-            )
-        done
-        for i in "${user_exclude_files[@]}" ; do
-            _user_exclude_files+=(
-                --exclude="$i"
-            )
-        done
-        for i in "${user_include_files[@]}" ; do
-            _user_include_files+=(
-                --include="$i"
-            )
-        done
-        for i in "${user_exclude_from[@]}" ; do
-            _user_exclude_from+=(
-                --exclude-from="$i"
-            )
-        done
-    fi
+    for i in "${exclude_dirs[@]}" ; do
+        _exclude_dirs+=(
+            --exclude-dir="$i"
+        )
+    done
+    for i in "${user_exclude_dirs[@]}" ; do
+        _user_exclude_dirs+=(
+            --exclude-dir="$i"
+        )
+    done
+    for i in "${exclude_files[@]}" ; do
+        _exclude_files+=(
+            --exclude="$i"
+        )
+    done
+    for i in "${user_exclude_files[@]}" ; do
+        _user_exclude_files+=(
+            --exclude="$i"
+        )
+    done
+    for i in "${user_include_files[@]}" ; do
+        _user_include_files+=(
+            --include="$i"
+        )
+    done
+    for i in "${user_exclude_from[@]}" ; do
+        _user_exclude_from+=(
+            --exclude-from="$i"
+        )
+    done
 
     declare -a command
 
-    if (( use_find )) ; then
-        command=(
-            find
-            "${find_options[@]}"
-            "${find_targets[@]}"
-            "${_exclude_dirs[@]}"
-            "${_user_exclude_dirs[@]}"
-            -type f
-            "${_user_include_files[@]}"
-            "${_user_exclude_files[@]}"
-            "${_exclude_files[@]}"
-            "$@"
-            -exec "${grep}" -I "$@" {} +
-        )
-    else
-        command=(
-            "${grep}" -I -r
-            "${_user_exclude_dirs[@]}"
-            "${_exclude_dirs[@]}"
-            "${_user_include_files[@]}"
-            "${_user_exclude_from[@]}"
-            "${_exclude_files[@]}"
-            "${_user_exclude_files[@]}"
-            "${grep_options[@]}"
-            "${grep_patterns[@]}"
-            "$@"
-        )
-    fi
+    command=(
+        "${grep}" -I -r
+        "${_user_exclude_dirs[@]}"
+        "${_exclude_dirs[@]}"
+        "${_user_include_files[@]}"
+        "${_user_exclude_from[@]}"
+        "${_exclude_files[@]}"
+        "${_user_exclude_files[@]}"
+        "${grep_options[@]}"
+        "${grep_patterns[@]}"
+        "$@"
+    )
 
     if (( print_command >= 2 )) ; then
         for i in "${command[@]}" ; do
@@ -462,11 +373,6 @@ exclude_files_grep () {
     (( $# < 1 )) && return
     exclude_files+=(--exclude="$1")
 }
-
-declare -a exclude_dirs=()
-declare -a _exclude_dirs=()
-declare -a exclude_files=()
-declare -a _exclude_files=()
 
 . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
