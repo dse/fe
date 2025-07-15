@@ -7,10 +7,17 @@ shopt -s lastpipe
 
 declare -i print_command=0
 declare -i print_command_continue=0
+
 declare -a user_exclude_dirs=()
 declare -a user_exclude_from=()
 declare -a user_exclude_files=()
 declare -a user_include_files=()
+
+declare -a _user_exclude_dirs=()
+declare -a _user_exclude_from=()
+declare -a _user_exclude_files=()
+declare -a _user_include_files=()
+
 declare -i emacs=0
 declare -i use_find=0
 
@@ -101,54 +108,54 @@ main () {
                 ;;
             -.html)
                 for i in "${file_set__html[@]}" ; do
-                    user_include_files+=(--include="${i}")
+                    user_include_files+=("${i}")
                 done
                 shift
                 ;;
             -.css)
                 for i in "${file_set__css[@]}" ; do
-                    user_include_files+=(--include="${i}")
+                    user_include_files+=("${i}")
                 done
                 shift
                 ;;
             -.js)
                 for i in "${file_set__js[@]}" ; do
-                    user_include_files+=(--include="${i}")
+                    user_include_files+=("${i}")
                 done
                 shift
                 ;;
             +.html)
                 for i in "${file_set__html[@]}" ; do
-                    user_exclude_files+=(--exclude="${i}")
+                    user_exclude_files+=("${i}")
                 done
                 shift
                 ;;
             +.css)
                 for i in "${file_set__css[@]}" ; do
-                    user_exclude_files+=(--exclude="${i}")
+                    user_exclude_files+=("${i}")
                 done
                 shift
                 ;;
             +.js)
                 for i in "${file_set__js[@]}" ; do
-                    user_exclude_files+=(--exclude="${i}")
+                    user_exclude_files+=("${i}")
                 done
                 shift
                 ;;
             -.*)
-                user_include_files+=(--include="*.${1#-.}")
+                user_include_files+=("*.${1#-.}")
                 shift
                 ;;
             --.*)               # --.html only adds .html, for example
-                user_include_files+=(--include="*.${1#--.}")
+                user_include_files+=("*.${1#--.}")
                 shift
                 ;;
             +.*)
-                user_exclude_files+=(--exclude="*.${1#+.}")
+                user_exclude_files+=("*.${1#+.}")
                 shift
                 ;;
             ++.*)
-                user_exclude_files+=(--exclude="*.${1#++.}")
+                user_exclude_files+=("*.${1#++.}")
                 shift
                 ;;
 
@@ -170,7 +177,7 @@ main () {
                     echo "fe: option missing required argument - --include"
                     exit 1
                 fi
-                user_include_files+=(--include="${2}")
+                user_include_files+=("${2}")
                 shift 2
                 ;;
             --exclude)
@@ -178,7 +185,7 @@ main () {
                     echo "fe: option missing required argument - --exclude"
                     exit 1
                 fi
-                user_exclude_files+=(--exclude="${2}")
+                user_exclude_files+=("${2}")
                 shift 2
                 ;;
             --exclude-dir)
@@ -186,7 +193,7 @@ main () {
                     echo "fe: option missing required argument - --exclude-dir"
                     exit 1
                 fi
-                user_exclude_dirs+=(--exclude-dir="${2}")
+                user_exclude_dirs+=("${2}")
                 shift 2
                 ;;
             --exclude-from)
@@ -194,23 +201,23 @@ main () {
                     echo "fe: option missing required argument - --exclude-from"
                     exit 1
                 fi
-                user_exclude_from+=(--exclude-from="${2}")
+                user_exclude_from+=("${2}")
                 shift 2
                 ;;
             --include=*)
-                user_include_files+=(--include="${1#*=}")
+                user_include_files+=("${1#*=}")
                 shift
                 ;;
             --exclude=*)
-                user_exclude_files+=(--exclude="${1#*=}")
+                user_exclude_files+=("${1#*=}")
                 shift
                 ;;
             --exclude-dir=*)
-                user_exclude_dirs+=(--exclude-dir="${1#*=}")
+                user_exclude_dirs+=("${1#*=}")
                 shift
                 ;;
             --exclude-from=*)
-                user_exclude_from+=(--exclude-from="${1#*=}")
+                user_exclude_from+=("${1#*=}")
                 shift
                 ;;
 
@@ -219,18 +226,143 @@ main () {
                 ;;
         esac
     done
-    declare -a command=(
-        "${grep}" -I -r
-        "${user_exclude_dirs[@]}"
-        "${exclude_dirs[@]}"
-        "${user_include_files[@]}"
-        "${user_exclude_from[@]}"
-        "${exclude_files[@]}"
-        "${user_exclude_files[@]}"
-        "${grep_options[@]}"
-        "${grep_patterns[@]}"
-        "$@"
-    )
+
+    declare -a find_options=()
+    declare -a find_targets=()
+
+    if (( use_find )) ; then
+        while (( $# )) ; do
+            case "$1" in
+                -P|-L|-H)
+                    find_options+=("$1")
+                    shift
+                    ;;
+                -D|-O)
+                    if (( $# < 2 )) ; then
+                        echo "option missing required argument - $1"
+                        exit 1
+                    fi
+                    find_options+=("$1" "$2")
+                    shift 2
+                    ;;
+                -D*|-O*)
+                    find_options+=("$1")
+                    shift
+                    ;;
+                *)
+                    # ends options; starting point arguments follow
+                    break
+                    ;;
+            esac
+        done
+        while (( $# )) ; do
+            case "$1" in
+                "!"|"("|-*)
+                    # ends starting points; find expression follows
+                    break
+                    ;;
+                *)
+                    find_targets+=("$1")
+                    shift
+                    ;;
+            esac
+        done
+    fi
+
+    if (( use_find )) ; then
+        for i in "${exclude_dirs[@]}" ; do
+            _exclude_dirs+=(
+                \! \( -type d -name "$i" -prune \)
+            )
+        done
+        for i in "${user_exclude_dirs[@]}" ; do
+            _user_exclude_dirs+=(
+                \! \( -type d -name "$i" -prune \)
+            )
+        done
+        for i in "${exclude_files[@]}" ; do
+            _exclude_files+=(
+                \! -name "$i"
+            )
+        done
+        for i in "${user_exclude_files[@]}" ; do
+            _user_exclude_files+=(
+                \! -name "$i"
+            )
+        done
+        for i in "${user_include_files[@]}" ; do
+            _user_include_files+=(
+                -o -name "$i"
+            )
+        done
+        for i in "${user_exclude_from[@]}" ; do
+            echo "fe: --exclude-from and --find are mutually exclusive" >&2
+            exit 1
+        done
+    else
+        for i in "${exclude_dirs[@]}" ; do
+            _exclude_dirs+=(
+                --exclude-dir="$i"
+            )
+        done
+        for i in "${user_exclude_dirs[@]}" ; do
+            _user_exclude_dirs+=(
+                --exclude-dir="$i"
+            )
+        done
+        for i in "${exclude_files[@]}" ; do
+            _exclude_files+=(
+                --exclude="$i"
+            )
+        done
+        for i in "${user_exclude_files[@]}" ; do
+            _user_exclude_files+=(
+                --exclude="$i"
+            )
+        done
+        for i in "${user_include_files[@]}" ; do
+            _user_include_files+=(
+                --include="$i"
+            )
+        done
+        for i in "${user_exclude_from[@]}" ; do
+            _user_exclude_from+=(
+                --exclude-from="$i"
+            )
+        done
+    fi
+
+    declare -a command
+
+    if (( use_find )) ; then
+        command=(
+            find
+            "${find_options[@]}"
+            "${find_targets[@]}"
+            "${_exclude_dirs[@]}"
+            "${_user_exclude_dirs[@]}"
+            -type f
+            "${_user_include_files[@]}"
+            "${_user_exclude_files[@]}"
+            "${_exclude_files[@]}"
+            "$@"
+            -exec "${grep}" -I "$@" {} +
+        )
+    else
+        command=(
+            "${grep}" -I -r
+            "${_user_exclude_dirs[@]}"
+            "${_exclude_dirs[@]}"
+            "${_user_include_files[@]}"
+            "${_user_exclude_from[@]}"
+            "${_exclude_files[@]}"
+            "${_user_exclude_files[@]}"
+            "${grep_options[@]}"
+            "${grep_patterns[@]}"
+            "$@"
+        )
+    fi
+
     if (( print_command >= 2 )) ; then
         for i in "${command[@]}" ; do
             echo "${i@Q}"
@@ -310,7 +442,6 @@ allow () {
     delete_from_excludes exclude_files "$@"
 }
 
-declare -a exclude_dirs=()
 exclude_dirs () {
     (( $# < 1 )) && return
     local i
@@ -318,9 +449,7 @@ exclude_dirs () {
         exclude_dirs+=(--exclude-dir="$i")
     done
 }
-. "$(dirname "$0")/../share/fe/exclude-dirs.sh"
 
-declare -a exclude_files=()
 exclude_files_find_grep () {
     (( $# < 1 )) && return
     local i
@@ -328,17 +457,25 @@ exclude_files_find_grep () {
         exclude_files+=(--exclude="$i")
     done
 }
+
 exclude_files_grep () {
     (( $# < 1 )) && return
     exclude_files+=(--exclude="$1")
 }
+
+declare -a exclude_dirs=()
+declare -a _exclude_dirs=()
+declare -a exclude_files=()
+declare -a _exclude_files=()
+
+. "$(dirname "$0")/../share/fe/exclude-dirs.sh"
 . "$(dirname "$0")/../share/fe/exclude-files.sh"
 
 user_include_files () {
     (( $# < 1 )) && return
     local i
     for i ; do
-        user_exclude_files+=(--include="$i")
+        user_include_files+=("$i")
     done
 }
 
@@ -346,7 +483,7 @@ user_exclude_files () {
     (( $# < 1 )) && return
     local i
     for i ; do
-        user_exclude_files+=(--exclude="$i")
+        user_exclude_files+=("$i")
     done
 }
 
@@ -354,7 +491,7 @@ user_exclude_dirs () {
     (( $# < 1 )) && return
     local i
     for i ; do
-        user_exclude_dirs+=(--exclude-dir="$i")
+        user_exclude_dirs+=("$i")
     done
 }
 
