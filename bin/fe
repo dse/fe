@@ -36,7 +36,7 @@ main () {
     while (( $# )) ; do
         case "$1" in
             --print-command|--dry-run)
-                print_command=1
+                print_command+=1
                 shift
                 ;;
             --pretty-print-command)
@@ -44,7 +44,7 @@ main () {
                 shift
                 ;;
             --verbose)
-                print_command_continue=1
+                print_command_continue+=1
                 shift
                 ;;
             --emacs)
@@ -228,35 +228,33 @@ main () {
     declare -a find_options=()
     declare -a find_targets=()
 
+    # remove --xxclude= prefixes from variables in case
+    # ~/.config/fe/fe.bash has:
+    #     user_exclude_dirs+=(--exclude-dir="master")
+    exclude_dirs=("${exclude_dirs[@]#--exclude-dir=}")
+    user_exclude_dirs=("${user_exclude_dirs[@]#--exclude-dir=}")
+    exclude_files=("${exclude_files[@]#--exclude=}")
+    user_exclude_files=("${user_exclude_files[@]#--exclude=}")
+    user_include_files=("${user_include_files[@]#--include=}")
+    user_exclude_from=("${user_exclude_from[@]#--exclude-from=}")
+
     for i in "${exclude_dirs[@]}" ; do
-        _exclude_dirs+=(
-            --exclude-dir="$i"
-        )
+        _exclude_dirs+=(--exclude-dir="$i")
     done
     for i in "${user_exclude_dirs[@]}" ; do
-        _user_exclude_dirs+=(
-            --exclude-dir="$i"
-        )
+        _user_exclude_dirs+=(--exclude-dir="$i")
     done
     for i in "${exclude_files[@]}" ; do
-        _exclude_files+=(
-            --exclude="$i"
-        )
+        _exclude_files+=(--exclude="$i")
     done
     for i in "${user_exclude_files[@]}" ; do
-        _user_exclude_files+=(
-            --exclude="$i"
-        )
+        _user_exclude_files+=(--exclude="$i")
     done
     for i in "${user_include_files[@]}" ; do
-        _user_include_files+=(
-            --include="$i"
-        )
+        _user_include_files+=(--include="$i")
     done
     for i in "${user_exclude_from[@]}" ; do
-        _user_exclude_from+=(
-            --exclude-from="$i"
-        )
+        _user_exclude_from+=(--exclude-from="$i")
     done
 
     declare -a command
@@ -282,7 +280,11 @@ main () {
         echo "${command[@]@Q}"
     else
         if (( print_command_continue )) ; then
-            echo "${command[@]@Q}" >&2
+            for i in "${command[@]}" ; do
+                echo "${i@Q}"
+            done
+        elif (( print_command_continue )) ; then
+            echo "${command[@]@Q}"
         fi
         exec "${command[@]}"
     fi
@@ -357,7 +359,7 @@ exclude_dirs () {
     (( $# < 1 )) && return
     local i
     for i ; do
-        exclude_dirs+=(--exclude-dir="$i")
+        exclude_dirs+=("$i")
     done
 }
 
@@ -365,13 +367,13 @@ exclude_files_find_grep () {
     (( $# < 1 )) && return
     local i
     for i ; do
-        exclude_files+=(--exclude="$i")
+        exclude_files+=("$i")
     done
 }
 
 exclude_files_grep () {
     (( $# < 1 )) && return
-    exclude_files+=(--exclude="$1")
+    exclude_files+=("$1")
 }
 
 . "$(dirname "$0")/../share/fe/exclude-dirs.sh"
