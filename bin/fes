@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o pipefail
+set -o nounset
+shopt -s lastpipe
+
+declare -a _exclude_dirs=()
+declare -a _exclude_files=()
+declare -a grep_args=()
+
+grep="grep"
+if [[ -v OSTYPE ]] && [[ "${OSTYPE}" = "darwin" ]] && type -P ggrep >/dev/null ; then
+    grep="ggrep"
+fi
+
+if [[ "${TERM}" = "emacs-grep" ]] ; then
+    grep_args+=(--color=auto -nH)
+elif [[ -t 1 ]] ; then
+    grep_options+=(--color=always)
+fi
+
+exclude_dirs            () { for i; do _exclude_dirs+=(--exclude-dir="$i"); done; }
+exclude_files_grep      () { for i; do _exclude_files+=(--exclude="$i");    done; }
+exclude_files_find_grep () { for i; do _exclude_files+=(--exclude="$i");    done; }
+
+. "$(dirname "$0")/../share/fe/exclude-sets.sh"
+
+exec "${grep}" -I -r \
+     "${_exclude_dirs[@]}" \
+     "${_exclude_files[@]}" \
+     "${grep_args[@]}" \
+     "$@"
