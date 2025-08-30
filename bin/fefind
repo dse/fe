@@ -196,6 +196,7 @@ add-directory-excludes () {
 
     # etc.
     add-directory-exclude 'zip-cache'
+    add-directory-exclude '__pycache__'
 }
 
 add-file-excludes () {
